@@ -1,0 +1,655 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>stock cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  :root{
+    --bg:#e6e8eb; --ink:#12161d; --muted:#5d6572; --line:#cfd3d9;
+    --panel:#0e1117; --teal:#26a69a; --red:#ef5350; --blue:#2f6bff;
+    --card-h:min(60vh,520px); --frame:#2f6bff;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;direction:rtl;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{padding-inline:16px}
+  .wrap{max-width:1272px;margin:0 auto;width:100%}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:24px 22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:64px;height:64px;border-radius:16px;background:#000;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(14,17,23,.18)}
+  .logo img{width:100%;height:100%;display:block;object-fit:cover}
+  .brand h1{margin:0;font-family:"Unbounded","Heebo",system-ui,sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1;direction:ltr}
+  .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .date{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:var(--muted);direction:ltr}
+
+  .night{position:relative;flex:1;background:#050b12;color:#e8eef3;border-radius:34px 34px 0 0;overflow:clip;isolation:isolate}
+  .night canvas{position:sticky;top:0;display:block;width:100%;height:100vh;margin-bottom:-100vh;z-index:-1;pointer-events:none}
+  .night .wrap{padding-block:34px 0}
+  section.row{padding-block:10px 18px;scroll-margin-top:16px}
+  section.row + section.row{border-top:1px solid rgba(160,220,235,.08)}
+  .row-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .row-head h2{margin:0;font-size:clamp(20px,2.6vw,28px);font-weight:700;text-wrap:balance;display:flex;align-items:center;gap:10px}
+  .row-head h2 .sw{width:10px;height:10px;border-radius:50%;background:var(--c)}
+  .count{font-size:13px;color:#8fa3b0}
+  .count b{font-family:"JetBrains Mono",monospace;color:#fff}
+  .none{margin:12px 0 4px;padding:14px 16px;border:1px dashed rgba(160,220,235,.16);border-radius:14px;color:#7f94a1;font-size:14px;text-align:center}
+
+  .stage{position:relative;-webkit-user-select:none;height:calc(var(--card-h) + 40px);margin-top:6px;overflow:hidden;perspective:1400px;touch-action:pan-y;user-select:none;cursor:grab}
+  .stage:active{cursor:grabbing}
+  .card{position:absolute;top:50%;left:50%;height:var(--card-h);aspect-ratio:1170/2346;max-width:none;margin:0;
+    transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .7s,opacity .7s;will-change:transform}
+  .card img{width:100%;height:100%;display:block;border-radius:calc(var(--card-h)*.045);
+    box-shadow:0 0 0 1px rgba(255,255,255,.08),0 30px 60px rgba(0,0,0,.55);pointer-events:none;-webkit-user-drag:none}
+  .card img{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--frame) 80%,white),0 30px 60px rgba(0,0,0,.55);transition:filter .6s}
+  .card.active img{box-shadow:0 0 0 2px color-mix(in srgb,var(--frame) 80%,white),0 0 40px color-mix(in srgb,var(--frame) 40%,transparent),0 30px 60px rgba(0,0,0,.6)}
+  .card.found img{animation:found 1.6s ease-out}
+  @keyframes found{0%,40%{box-shadow:0 0 0 3px #fff,0 0 70px var(--c),0 30px 60px rgba(0,0,0,.6)}}
+  .card.locked img{filter:brightness(.32) saturate(.5) blur(2px)}
+  .lock{position:absolute;left:50%;top:50%;width:42%;transform:translate(-50%,-50%);border:0;padding:0;background:none;cursor:pointer;
+    filter:drop-shadow(0 14px 18px rgba(0,0,0,.55));transition:transform .45s cubic-bezier(.3,1.6,.5,1),opacity .45s}
+  .lock svg{width:100%;height:auto;display:block;overflow:visible}
+  .lock .shackle{transition:transform .35s ease}
+  .lock:hover{transform:translate(-50%,-50%) scale(1.06)}
+  .lock:focus-visible{outline:2px solid var(--frame);outline-offset:6px;border-radius:12px}
+  .lock.opening .shackle{transform:translateY(-14px)}
+  .lock.gone{opacity:0;transform:translate(-50%,-60%) scale(.7);pointer-events:none}
+
+  .ctrl{display:flex;align-items:center;justify-content:center;gap:18px;padding-block:4px 0}
+  .ctrl button{width:42px;height:42px;border-radius:50%;border:1px solid rgba(160,220,235,.18);background:rgba(255,255,255,.04);color:#e8eef3;font-size:18px;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+  .ctrl button:hover{background:rgba(255,255,255,.12)}
+  .ctrl button:focus-visible,.dots button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .dots{display:flex;gap:8px;direction:ltr}
+  .dots button{width:8px;height:8px;border-radius:99px;border:0;padding:0;background:#3a4a56;cursor:pointer;transition:width .3s,background .3s}
+  .dots button[aria-current="true"]{width:26px;background:var(--c)}
+  .ticker{font-family:"JetBrains Mono",monospace;font-size:14px;min-width:110px;text-align:center;direction:ltr}
+
+  .hint{padding-block:18px 0;color:#7f94a1;font-size:13px;text-align:center}
+  .copy{margin-top:40px;padding-block:22px 28px;border-top:1px solid rgba(160,220,235,.1);display:flex;justify-content:center;align-items:center;gap:8px;direction:ltr;color:#b9c8d1;font-size:14px;letter-spacing:.04em}
+  .copy span{font-family:"Unbounded","Heebo",sans-serif;font-weight:600;color:#fff}
+
+  /* Search, centered on the starry section above the indicator rows */
+  .tools{position:relative;z-index:200;display:flex;justify-content:center;gap:10px;width:min(460px,100%);margin:0 auto 22px}
+  .search{position:relative;flex:1;min-width:0;max-width:300px}
+  .sbox{display:flex;align-items:center;gap:8px;height:42px;padding-inline:14px 6px;border-radius:99px;
+    background:rgba(255,255,255,.06);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(160,220,235,.22);box-shadow:0 10px 30px rgba(3,7,12,.35);color:#e8eef3;transition:border-color .2s,box-shadow .2s}
+  .sbox:focus-within{border-color:#5ff0d6;box-shadow:0 0 0 3px rgba(95,240,214,.18),0 10px 30px rgba(3,7,12,.4)}
+  .sbox svg{flex:none;opacity:.7}
+  .sbox input{flex:1;min-width:0;height:100%;border:0;background:none;outline:none;color:inherit;font:500 14px "Heebo",system-ui,sans-serif}
+  .sbox input::placeholder{color:#8fa3b0}
+  .sbox input::-webkit-search-cancel-button{display:none}
+  .sclear{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:#e8eef3;cursor:pointer;font-size:16px;line-height:1}
+  .sclear:hover{background:rgba(255,255,255,.16)}
+  .results{position:absolute;top:100%;inset-inline:-40px;margin:8px 0 0;padding:6px;list-style:none;border-radius:18px;max-height:min(360px,60vh);overflow:auto;
+    background:rgba(14,17,23,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(160,220,235,.16);box-shadow:0 18px 40px rgba(3,7,12,.5);color:#e8eef3}
+  .results li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer}
+  .results li[aria-selected="true"],.results li:hover{background:rgba(255,255,255,.08)}
+  .results .sw{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}
+  .results .sym{font:500 14px "JetBrains Mono",monospace;direction:ltr;min-width:52px}
+  .results .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:right}
+  .results .grp{flex:none;font-size:12px;color:#8fa3b0}
+  .results .empty{cursor:default;color:#8fa3b0;justify-content:center}
+  .results mark{background:none;color:#5ff0d6}
+  @media (max-width:760px){ .results{inset-inline:0} .results .grp{display:none} }
+
+  /* Upside / risk filter, same glass pill as the search */
+  .filter{position:relative;flex:none}
+  .fbtn{display:flex;align-items:center;gap:8px;height:42px;padding-inline:14px;border-radius:99px;cursor:pointer;
+    background:rgba(255,255,255,.06);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(160,220,235,.22);box-shadow:0 10px 30px rgba(3,7,12,.35);color:#e8eef3;
+    font:500 14px "Heebo",system-ui,sans-serif;white-space:nowrap;transition:border-color .2s,box-shadow .2s,background .2s}
+  .fbtn:hover{background:rgba(255,255,255,.1)}
+  .fbtn svg{flex:none;opacity:.7}
+  .fbtn[aria-expanded="true"],.fbtn:focus-visible{outline:none;border-color:#5ff0d6;box-shadow:0 0 0 3px rgba(95,240,214,.18),0 10px 30px rgba(3,7,12,.4)}
+  .fbtn.on{border-color:#5ff0d6}
+  .fbtn .fdot{width:7px;height:7px;border-radius:50%;background:#5ff0d6;box-shadow:0 0 8px #5ff0d6}
+  .fpanel{position:absolute;top:100%;inset-inline-end:0;width:min(290px,calc(100vw - 32px));margin-top:8px;padding:16px;border-radius:18px;
+    background:rgba(14,17,23,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(160,220,235,.16);box-shadow:0 18px 40px rgba(3,7,12,.5);color:#e8eef3}
+  .frow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:13px;color:#b9c8d1}
+  .frow + input{margin-bottom:16px}
+  .frow output{font:500 14px "JetBrains Mono",monospace;direction:ltr}
+  .frow output.up{color:var(--teal)} .frow output.dn{color:var(--red)}
+  .fpanel input[type=range]{width:100%;margin:8px 0 0;accent-color:#5ff0d6;cursor:pointer}
+  .ffoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid rgba(160,220,235,.1);font-size:13px;color:#8fa3b0}
+  .ffoot b{font-family:"JetBrains Mono",monospace;color:#fff}
+  .freset{height:32px;padding-inline:14px;border-radius:99px;border:0;background:rgba(255,255,255,.08);color:#e8eef3;font:500 13px "Heebo",system-ui,sans-serif;cursor:pointer}
+  .freset:hover{background:rgba(255,255,255,.16)}
+  .freset:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  .card.active:not(.locked){cursor:zoom-in}
+  .zoom{position:fixed;inset:0;z-index:1000;background:rgba(3,7,12,.0);backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);
+    transition:background .5s,backdrop-filter .5s,-webkit-backdrop-filter .5s;cursor:zoom-out}
+  .zoom.on{background:rgba(3,7,12,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .zcard{position:fixed;perspective:2000px;transition:left .6s cubic-bezier(.2,.8,.2,1),top .6s cubic-bezier(.2,.8,.2,1),width .6s cubic-bezier(.2,.8,.2,1),height .6s cubic-bezier(.2,.8,.2,1)}
+  .zflip{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .8s cubic-bezier(.3,1.15,.45,1) .05s}
+  .zoom.flipped .zflip{transform:rotateY(180deg)}
+  .zflip img{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;border-radius:4.5% / 2.25%;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;pointer-events:none;
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--frame) 80%,white),0 0 50px color-mix(in srgb,var(--frame) 40%,transparent),0 30px 70px rgba(0,0,0,.7)}
+  .zflip .zb{transform:rotateY(180deg);background:#fff}
+  .zhint{position:fixed;inset-inline:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#b9c8d1;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+  .zoom.flipped .zhint{opacity:1}
+
+  @media (max-width:640px){
+    :root{--card-h:min(58vh,440px)}
+  }
+  @media (prefers-reduced-motion:reduce){ .card,.zcard,.zflip,.zoom{transition:none} .card.found img{animation:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><img src="tradescout-logo.png" alt=""></div>
+      <div>
+        <h1>TradeScout</h1>
+        <p>כרטיסי ניתוח טכני יומיים לפי אינדיקטור</p>
+      </div>
+    </div>
+    <div class="date">03.10.2026 · 1D</div>
+  </header>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lkS" x1="0" x2="1"><stop offset="0" stop-color="#8d9196"/><stop offset=".25" stop-color="#f4f5f6"/><stop offset=".5" stop-color="#9ea2a7"/><stop offset=".78" stop-color="#e3e5e7"/><stop offset="1" stop-color="#7c8085"/></linearGradient>
+    <linearGradient id="lkB" x1="0" x2="1"><stop offset="0" stop-color="#8a8e93"/><stop offset=".08" stop-color="#c9ccd0"/><stop offset=".45" stop-color="#b3b7bb"/><stop offset=".75" stop-color="#d2d5d8"/><stop offset=".93" stop-color="#a7abb0"/><stop offset="1" stop-color="#6f7378"/></linearGradient>
+    <linearGradient id="lkT" y1="0" y2="1" x1="0" x2="0"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".1" stop-color="#fff" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>
+    <pattern id="lkBr" width="200" height="3" patternUnits="userSpaceOnUse"><rect width="200" height="1" fill="#fff" opacity=".10"/><rect y="2" width="140" height=".6" fill="#000" opacity=".08"/></pattern>
+  </defs>
+</svg>
+</div>
+<div class="night">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="tools">
+    <div class="search" role="search">
+      <div class="sbox">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="q" type="search" placeholder="חיפוש סימול או חברה" autocomplete="off" spellcheck="false"
+          role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list" aria-label="חיפוש מניה">
+        <button class="sclear" id="qclear" type="button" aria-label="נקה חיפוש" hidden>×</button>
+      </div>
+      <ul class="results" id="results" role="listbox" hidden></ul>
+    </div>
+    <div class="filter">
+      <button class="fbtn" id="fbtn" type="button" aria-expanded="false" aria-controls="fpanel">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+        סיכוי / סיכון<span class="fdot" id="fdot" hidden></span>
+      </button>
+      <div class="fpanel" id="fpanel" role="group" aria-label="סינון לפי סיכוי וסיכון" hidden>
+        <label class="frow" for="fup">סיכוי מינימלי<output class="up" id="fupv" for="fup"></output></label>
+        <input type="range" id="fup" min="0" step="0.5">
+        <label class="frow" for="frisk">סיכון מקסימלי<output class="dn" id="friskv" for="frisk"></output></label>
+        <input type="range" id="frisk" min="0" step="0.05">
+        <div class="ffoot"><span><b id="fcount">0</b> מניות מתאימות</span><button class="freset" id="freset" type="button">איפוס</button></div>
+      </div>
+    </div>
+    </div>
+    <main id="rows"></main>
+    <p class="hint">החליקו בשתי אצבעות על המשטח, גררו או השתמשו בחצים · לחצו על הכרטיס האמצעי למסך מלא · לחיצה כפולה על כרטיס שומרת אותו במועדפים · לחצו על המנעול כדי לפתוח כרטיס</p>
+    <footer class="copy">© <span>Eldar &amp; Elazar</span></footer>
+  </div>
+</div>
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="כרטיס מניה במסך מלא">
+  <div class="zcard"><div class="zflip"><img class="zf" alt="" draggable="false"><img class="zb" alt="" draggable="false"></div></div>
+  <p class="zhint">לחצו שוב כדי לחזור לגרף</p>
+</div>
+
+<script src="fav.js"></script>
+<script>
+// Indicator categories, in display order. `id` is the indicator name used in card file names.
+const ROWS = [
+  { id:"support",    title:"קו תמיכה",                  color:"#2f6bff",
+    files:[["HEI_support_302.28",5.0,0.1],["CG_support_39.16",5.2,1.7],["DPZ_support_297.56",5.5,0.0],["NN_support_13.94",5.5,0.3],["AMR_support_171.31",6.2,0.1],["MKC.V_support_45.76",6.3,1.0],["AMPH_support_25.28",7.4,0.6],["AIR_support_101.24",8.1,1.2],["AGI_support_32.30",8.2,0.5],["PBH_support_44.79",8.5,1.0],["SYRE_support_92.48",8.5,0.8],["CGAU_support_21.40",9.0,0.1],["TXN_support_289.09",13.7,1.6],["SAFT_support_103.21",null,0.7]] },
+  { id:"breakout",   title:"מניות פורצות התנגדות",      color:"#ffb020",
+    files:[["HEI_breakout_299.18",5.0,1.1],["MCHP_breakout_79.98",5.0,1.6],["RRC_breakout_37.85",5.1,1.0],["ARHS_breakout_10.17",5.7,0.7],["FSM_breakout_11.20",6.4,0.4],["COP_breakout_126.62",6.7,0.1],["LYFT_breakout_15.41",7.2,0.4],["NOVT_breakout_149.12",8.1,0.1],["AGI_breakout_32.43",8.2,0.1],["WGS_breakout_72.39",8.2,1.0],["UI_breakout_614.28",8.6,1.0],["ETN_breakout_431.03",9.6,1.2],["ESTC_breakout_92.10",10.1,2.0],["XERS_breakout_9.01",11.0,0.7],["EGO_breakout_37.72",14.6,1.0],["CNMD_breakout_45.51",15.8,1.8],["SAFT_breakout_103.75",null,0.2]] },
+  { id:"trendline",  title:"קו מגמה",                   color:"#26a69a",
+    files:[["HEI_trendline_302.30",5.0,0.0],["INNV_trendline_8.81",5.0,1.7],["RRC_trendline_38.02",5.1,0.6],["SB_trendline_8.66",5.4,1.7],["NN_trendline_13.91",5.5,0.5],["HLNE_trendline_85.43",5.7,1.9],["CHRN_trendline_19.09",5.9,0.6],["SON_trendline_48.48",6.1,0.5],["FRNM_trendline_16.12",6.2,1.2],["NEU_trendline_922.70",6.2,0.1],["ATEC_trendline_9.91",6.6,1.2],["COP_trendline_124.46",6.7,1.8],["RLJ_trendline_11.14",7.1,0.7],["LYFT_trendline_15.38",7.2,0.5],["UNIT_trendline_7.98",7.6,0.8],["LGND_trendline_298.41",7.8,1.5],["TNDM_trendline_16.47",7.8,0.2],["AIR_trendline_100.52",8.1,1.9],["PBH_trendline_45.10",8.5,0.4],["USAR_trendline_13.34",9.3,1.9],["IMVT_trendline_33.12",9.8,1.5],["EAT_trendline_200.64",12.0,0.7],["RUM_trendline_7.57",13.6,0.1],["ANF_trendline_133.88",14.0,1.5],["CNMD_trendline_46.24",15.8,0.2],["SLS_trendline_11.73",17.4,0.1],["RHI_trendline_36.04",25.6,0.2],["SAFT_trendline_103.50",null,0.4]] },
+  { id:"ma150",      title:"ממוצע 150",                 color:"#ff6ec7",
+    files:[["MCHP_ma150_80.74",5.0,0.7],["ALKS_ma150_41.67",5.7,0.2],["GAP_ma150_22.25",6.8,1.2],["BNY_ma150_142.55",8.9,2.0],["IMVT_ma150_33.54",9.8,0.2]] },
+  { id:"ma200",      title:"ממוצע 200",                 color:"#9b8cff",
+    files:[["LYFT_ma200_15.41",7.2,0.3],["AIP_ma200_24.59",11.6,0.3]] },
+  { id:"cuphandle",  title:"Cup & Handle",              color:"#00c2ff",
+    files:[["PI_cuphandle_186.66",13.2,1.6],["NVDA_cuphandle_229.98",15.5,1.7],["ACN_cuphandle_197.63",39.3,0.6]] },
+  { id:"gapup",      title:"גאפ עליון",                 color:"#7ee07a",
+    files:[["FRO_gap_52.88",1.0,null],["CAMT_gap_166.00",1.7,null],["NVT_gap_171.95",2.1,null],["FTI_gap_69.53",2.5,null],["ATI_gap_197.00",2.9,null],["AYA_gap_27.68",2.9,null],["FER_gap_54.62",3.0,null],["OVV_gap_61.61",3.2,null],["ADEA_gap_26.52",3.3,null],["NOV_gap_19.21",3.4,null],["CRGY_gap_13.69",3.5,null],["CSTM_gap_25.12",3.6,null],["GSBD_gap_9.28",3.9,null],["MSDL_gap_13.89",4.1,null],["LQDA_gap_29.18",4.3,null],["RBLX_gap_44.59",4.3,null],["UPST_gap_23.68",4.4,null],["WLK_gap_65.59",4.4,null],["AA_gap_43.49",4.8,null],["ESLT_gap_719.00",4.9,null],["NOC_gap_488.46",5.0,null],["THRM_gap_32.26",5.2,null],["STX_gap_852.29",5.3,null],["LEU_gap_146.00",5.4,null],["MRVI_gap_8.18",5.4,null],["AAOI_gap_118.90",5.5,null],["DCH_gap_5.76",5.5,null],["CRWV_gap_92.80",5.6,null],["PM_gap_196.66",5.7,null],["OMC_gap_77.46",5.8,null],["RSI_gap_20.87",5.8,null],["TSN_gap_54.24",5.8,null],["CVSA_gap_130.88",6.0,null],["HUBB_gap_494.56",6.0,null],["OTF_gap_10.03",6.1,null],["VMC_gap_254.54",6.1,null],["ROL_gap_31.58",7.0,null],["AES_gap_14.94",13.3,null],["MDB_gap_370.43",14.3,null],["FICO_gap_685.00",25.8,null]] },
+  { id:"ihs",        title:"Inverse Head & Shoulders",  color:"#ff8a3d",
+    files:[["FTNT_invhs_179.73",11.4,0.7],["GCT_invhs_53.47",13.8,0.5],["CMRE_invhs_15.41",14.3,0.2],["NVDA_invhs_229.72",16.1,1.8],["BHE_invhs_86.43",16.3,1.1],["GPRE_invhs_15.13",18.4,0.7],["ECHO_invhs_93.12",19.1,1.2],["QLYS_invhs_189.69",19.7,1.7],["OLLI_invhs_86.94",20.0,1.3],["LFUS_invhs_451.70",20.8,1.1],["APH_invhs_86.48",20.9,0.6],["CLS_invhs_381.13",23.2,1.6],["ACM_invhs_59.61",25.3,0.1],["CVLT_invhs_148.98",25.5,0.9],["HAFN_invhs_10.18",31.3,0.7],["RXRX_invhs_4.10",31.4,0.6]] },
+  { id:"reddays",    title:"\u200E5+\u200E ימים אדומים",  color:"#ef5350",
+    files:[["CCJ_reddays_8",null,null],["EFC_reddays_8",null,null],["FMC_reddays_8",null,null],["HROW_reddays_8",null,null],["WY_reddays_8",null,null],["XRAY_reddays_8",null,null],["ANAB_reddays_6",null,null],["CAI_reddays_6",null,null],["ICE_reddays_6",null,null],["IIPR_reddays_6",null,null],["KHC_reddays_6",null,null],["TTE_reddays_6",null,null],["AAP_reddays_5",null,null],["AGNC_reddays_5",null,null],["ALNY_reddays_5",null,null],["AZN_reddays_5",null,null],["BAP_reddays_5",null,null],["BXMT_reddays_5",null,null],["CCS_reddays_5",null,null],["CNM_reddays_5",null,null],["DHC_reddays_5",null,null],["DLX_reddays_5",null,null],["FHI_reddays_5",null,null],["GPN_reddays_5",null,null],["IP_reddays_5",null,null],["KKR_reddays_5",null,null],["LBTYK_reddays_5",null,null],["LOW_reddays_5",null,null],["MC_reddays_5",null,null],["MMM_reddays_5",null,null],["NLY_reddays_5",null,null],["NVR_reddays_5",null,null],["OPK_reddays_5",null,null],["PJT_reddays_5",null,null],["PSEC_reddays_5",null,null],["RYTM_reddays_5",null,null],["SAIC_reddays_5",null,null],["SARO_reddays_5",null,null],["SBRA_reddays_5",null,null],["SPB_reddays_5",null,null],["SW_reddays_5",null,null],["VTOL_reddays_5",null,null],["WD_reddays_5",null,null],["WFG_reddays_5",null,null]] },
+  { id:"ma20far",    title:"מניות רחוקות מממוצע 20",    color:"#f5d90a",
+    files:[["ARR_ma20_14.85",9.3,null],["CAG_ma20_14.61",9.3,null],["SPOT_ma20_516.73",9.3,null],["FAF_ma20_68.46",9.5,null],["GPN_ma20_85.81",9.5,null],["OTF_ma20_10.49",9.5,null],["IIPR_ma20_55.36",9.6,null],["NFLX_ma20_73.50",9.6,null],["WEX_ma20_185.36",9.6,null],["BX_ma20_122.59",9.7,null],["HE_ma20_9.77",9.7,null],["MKC_ma20_49.09",9.9,null],["MPT_ma20_3.59",9.9,null],["PRGS_ma20_40.55",9.9,null],["BMRN_ma20_62.88",10.0,null],["NRG_ma20_104.89",10.1,null],["CHWY_ma20_20.02",10.2,null],["BAH_ma20_74.28",10.3,null],["GIS_ma20_35.31",10.3,null],["SBAC_ma20_174.78",10.3,null],["WYNN_ma20_83.67",10.3,null],["PENN_ma20_16.30",10.4,null],["PIPR_ma20_72.16",10.4,null],["IONS_ma20_48.10",10.5,null],["RCI_ma20_34.07",10.5,null],["ETOR_ma20_28.14",10.7,null],["LBTYK_ma20_9.68",10.7,null],["MKC.V_ma20_51.14",10.7,null],["FOUR_ma20_40.15",11.0,null],["HOS_ma20_8.43",11.0,null],["BCE_ma20_21.94",11.2,null],["FA_ma20_20.12",11.2,null],["FIS_ma20_36.09",11.2,null],["LBTYA_ma20_9.93",11.3,null],["LVS_ma20_40.36",11.4,null],["PAYX_ma20_110.22",11.4,null],["AN_ma20_181.29",11.6,null],["PRG_ma20_34.63",11.7,null],["ARWR_ma20_71.84",11.9,null],["GIL_ma20_45.87",11.9,null],["MIRM_ma20_92.79",11.9,null],["AGNC_ma20_9.84",12.0,null],["CLDX_ma20_35.53",12.3,null],["AXSM_ma20_201.53",12.4,null],["PJT_ma20_155.84",12.4,null],["EFX_ma20_157.56",12.5,null],["PHVS_ma20_35.10",12.5,null],["ALNY_ma20_247.41",12.6,null],["SGHC_ma20_12.68",12.7,null],["TRU_ma20_71.67",13.0,null],["XRAY_ma20_9.80",13.0,null],["KGC_ma20_27.21",13.1,null],["WD_ma20_38.44",13.2,null],["AIR_ma20_116.29",13.4,null],["MGTX_ma20_12.24",13.5,null],["IMNM_ma20_23.74",13.6,null],["WEN_ma20_6.95",13.6,null],["NLY_ma20_21.03",13.7,null],["STWD_ma20_14.83",13.7,null],["WY_ma20_21.04",13.9,null],["IMTX_ma20_8.69",14.4,null],["GRND_ma20_15.37",14.5,null],["GHRS_ma20_26.28",14.6,null],["MOS_ma20_24.16",14.7,null],["MRP_ma20_28.26",14.8,null],["MAAS_ma20_15.81",15.4,null],["RSI_ma20_23.11",15.5,null],["DYN_ma20_17.60",15.8,null],["TYRA_ma20_23.67",15.8,null],["UNIT_ma20_9.31",15.8,null],["MLYS_ma20_27.42",16.0,null],["THRM_ma20_36.35",16.1,null],["CHTR_ma20_127.02",16.2,null],["APP_ma20_312.46",16.5,null],["ORC_ma20_5.98",17.0,null],["AXGN_ma20_43.77",17.1,null],["TPB_ma20_65.49",17.7,null],["BXMT_ma20_12.88",18.1,null],["FLUT_ma20_89.15",19.2,null],["WGS_ma20_87.21",19.3,null],["DKNG_ma20_22.20",19.4,null],["STC_ma20_61.72",19.7,null],["MGM_ma20_36.70",20.4,null],["BCAX_ma20_21.28",20.7,null],["RAPP_ma20_39.07",21.4,null],["ALHC_ma20_9.71",22.3,null],["GEN_ma20_26.91",22.4,null],["ALKT_ma20_17.04",22.7,null],["FMC_ma20_10.45",23.8,null],["XENE_ma20_47.09",23.9,null],["ACAD_ma20_24.86",24.6,null],["NESR_ma20_31.35",27.1,null],["FICO_ma20_875.10",32.3,null],["OCUL_ma20_9.65",38.6,null],["NKTR_ma20_63.70",46.2,null],["EMAT_ma20_3.19",56.4,null],["XNDU_ma20_6.79",57.9,null],["QURE_ma20_39.36",67.8,null],["LQDA_ma20_62.40",117.9,null],["CTVA_ma20_74.57",525.6,null]] }
+];
+
+// Company names for search: symbol → [English name, Hebrew name]. Add new symbols here.
+const NAMES = {
+  NPO:["Enpro","אנפרו"], CELC:["Celcuity","סלקיוטי"], IVZ:["Invesco","אינבסקו"], EZPW:["EZCORP","איזיקורפ"],
+  PSN:["Parsons","פרסונס"], NDAQ:["Nasdaq","נאסדק"], KBH:["KB Home","קיי בי הום"], AXTA:["Axalta Coating Systems","אקסלטה"],
+  KTB:["Kontoor Brands","קונטור"], FLOC:["Flowco Holdings","פלואוקו"], BAC:["Bank of America","בנק אוף אמריקה"],
+  ROP:["Roper Technologies","רופר"], VAL:["Valaris","ואלאריס"], ADBE:["Adobe","אדובי"], ETSY:["Etsy","אטסי"],
+  COMP:["Compass","קומפס"], CECO:["CECO Environmental","סקו"], PRGS:["Progress Software","פרוגרס"],
+  NOW:["ServiceNow","סרוויס נאו"], BJRI:["BJ's Restaurants","בי ג'יי"], FBIN:["Fortune Brands Innovations","פורצ'ן ברנדס"],
+  MLKN:["MillerKnoll","מילרנול"], ALKT:["Alkami Technology","אלקמי"], TRVI:["Trevi Therapeutics","טרווי"],
+  DAC:["Danaos","דנאוס"], ALNY:["Alnylam Pharmaceuticals","אלנילם"], OWL:["Blue Owl Capital","בלו אאול"],
+  HL:["Hecla Mining","הקלה"], FIGS:["FIGS","פיגס"], CRDO:["Credo Technology","קרדו"],
+  VST:["Vistra","ויסטרה"], DPZ:["Domino's Pizza","דומינוס פיצה"], CPRT:["Copart","קופארט"],
+  MNST:["Monster Beverage","מונסטר"], TTWO:["Take-Two Interactive","טייק טו"], WTW:["Willis Towers Watson","וויליס טאוורס ווטסון"],
+  LLY:["Eli Lilly","אלי לילי"], MPWR:["Monolithic Power Systems","מונוליתיק פאוור"], CSGP:["CoStar Group","קוסטאר"],
+  PAYX:["Paychex","פייצ'קס"], AAPL:["Apple","אפל"], MSFT:["Microsoft","מיקרוסופט"], NVDA:["Nvidia","אנבידיה"],
+  AMZN:["Amazon","אמזון"], GOOGL:["Alphabet Google","גוגל"], META:["Meta Platforms","מטא"], TSLA:["Tesla","טסלה"],
+  AMD:["Advanced Micro Devices","איי אם די"], NFLX:["Netflix","נטפליקס"], AVGO:["Broadcom","ברודקום"]
+};
+const INDEX = [];   // one entry per stock, filled as rows are built
+
+let zoomOpen = false;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const root = document.getElementById("rows");
+
+const LOCK_SVG = `<svg viewBox="0 0 200 250" aria-hidden="true">
+  <g class="shackle"><path d="M52 118 V70 a48 48 0 0 1 96 0 V118" fill="none" stroke="url(#lkS)" stroke-width="20"/></g>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkB)"/>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkBr)"/>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkT)"/>
+  <path d="M100 150 a17 17 0 0 1 9 31.5 L116 214 H84 L91 181.5 A17 17 0 0 1 100 150Z" fill="#26282b" stroke="#6d7175" stroke-width="1.5"/>
+</svg>`;
+
+// Upside / risk filter. Each files entry is [base, upside %, risk %].
+const FILTER = { up:0, risk:Infinity };
+const passes = f => f[1] >= FILTER.up && (f[2] == null || f[2] <= FILTER.risk);
+const filtering = () => FILTER.up > 0 || FILTER.risk !== Infinity;
+const opened = new Set();   // cards unlocked by the viewer, kept across filter changes
+let buildAC = null, cleanups = [];
+
+function buildRows(){
+  if (buildAC) buildAC.abort();
+  cleanups.forEach(fn => fn()); cleanups = [];
+  buildAC = new AbortController();
+  const sig = { signal: buildAC.signal };
+  root.innerHTML = ""; INDEX.length = 0;
+
+ROWS.forEach((row0, ri) => {
+  const row = { ...row0, files: row0.files.filter(passes) };
+  const total = row0.files.length;
+  const n = row.files.length;
+  if (!n) {   // category with no cards (today, or after filtering): keep its heading, show a short note
+    const sec = document.createElement("section");
+    sec.className = "row empty";
+    sec.style.setProperty("--c", row.color);
+    sec.innerHTML = `
+      <div class="row-head">
+        <h2><span class="sw"></span>${row.title}</h2>
+        <span class="count"><b>0</b>${total ? ` מתוך ${total}` : ""} מניות</span>
+      </div>
+      <p class="none">${total ? "אין מניות בקטגוריה הזו שעומדות בסינון" : "אין כרטיסים בקטגוריה הזו היום"}</p>`;
+    root.appendChild(sec);
+    return;
+  }
+  // The first three cards of the day stay free whatever the filter shows
+  const unlocked = row.files.map(f => row0.files.indexOf(f) < 3 || opened.has(f[0]));
+  // Repeat short lists so the wheel always looks full
+  let slots = [];
+  while (slots.length < 5) slots = slots.concat(row.files.map(([f],i)=>({f,i})));
+  const m = slots.length;
+
+  const sec = document.createElement("section");
+  sec.className = "row";
+  sec.style.setProperty("--c", row.color);
+  sec.innerHTML = `
+    <div class="row-head">
+      <h2><span class="sw"></span>${row.title}</h2>
+      <span class="count"><b>${n}</b>${n < total ? ` מתוך ${total}` : ""} מניות</span>
+    </div>
+    <div class="stage" tabindex="0" aria-roledescription="carousel" aria-label="${row.title}"></div>
+    <div class="ctrl">
+      <button class="next" aria-label="הבא">›</button>
+      <div class="dots"></div>
+      <span class="ticker"></span>
+      <button class="prev" aria-label="הקודם">‹</button>
+    </div>`;
+  root.appendChild(sec);
+
+  const stage = sec.querySelector(".stage"), dots = sec.querySelector(".dots"), ticker = sec.querySelector(".ticker");
+  const cards = slots.map(({f,i}) => {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.dataset.file = i;
+    el.innerHTML = `<img data-src="img/${f}_card.webp" alt="${f.split("_")[0]}" width="500" height="1000" loading="lazy" decoding="async" draggable="false">`;
+    if (!unlocked[i]) {
+      el.classList.add("locked");
+      const b = document.createElement("button");
+      b.className = "lock";
+      b.setAttribute("aria-label", "פתח את " + f.split("_")[0]);
+      b.innerHTML = LOCK_SVG;
+      b.addEventListener("pointerdown", e => e.stopPropagation());
+      b.addEventListener("click", e => { e.stopPropagation(); unlock(i); });
+      el.appendChild(b);
+    }
+    stage.appendChild(el);
+    return el;
+  });
+  function unlock(i){
+    unlocked[i] = true;
+    opened.add(row.files[i][0]);
+    cards.forEach(el => {
+      if (+el.dataset.file !== i) return;
+      const b = el.querySelector(".lock");
+      if (!b) return;
+      b.classList.add("opening");
+      setTimeout(() => { b.classList.add("gone"); el.classList.remove("locked"); }, reduce ? 0 : 320);
+      setTimeout(() => b.remove(), reduce ? 0 : 900);
+    });
+    restart();
+  }
+  const dotBtns = row.files.map((f,i) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-label", f[0].split("_")[0]);
+    b.onclick = () => { go(nearest(i)); restart(); };
+    dots.appendChild(b);
+    return b;
+  });
+
+  let active = n >= 3 ? 1 : 0;   // lowest-target cards sit in front
+  const wrapOff = o => { o = ((o % m) + m) % m; return o > m/2 ? o - m : o; };
+  function nearest(i){ // slot showing file i closest to current
+    let best = active, bd = 1e9;
+    slots.forEach((s,k)=>{ if(s.i===i){ const d=Math.abs(wrapOff(k-active)); if(d<bd){bd=d;best=k;} } });
+    return best;
+  }
+  function render(){
+    const w = stage.querySelector(".card").offsetWidth;
+    const narrow = stage.offsetWidth < 640;
+    const gap = w * (narrow ? .55 : .78);
+    cards.forEach((el,k) => {
+      const o = wrapOff(k - active), a = Math.abs(o);
+      const x = -o * gap;               // RTL: next card sits to the left
+      const s = 1 - Math.min(a, 3) * .12;
+      const ry = Math.max(-1, Math.min(1, o)) * -8;
+      el.style.transform = `translate(-50%,-50%) translateX(${x}px) scale(${s}) rotateY(${ry}deg)`;
+      el.style.zIndex = 100 - Math.round(a*10);
+      el.style.opacity = a > 2.5 ? 0 : 1;
+      el.style.filter = a < .5 ? "none" : `brightness(${1 - Math.min(a,2)*.22})`;
+      el.classList.toggle("active", a < .5);
+      if (a <= 3) { const im = el.querySelector("img[data-src]"); if (im) { im.src = im.dataset.src; im.removeAttribute("data-src"); } }
+    });
+    const cur = slots[active].i;
+    dotBtns.forEach((b,i)=>b.setAttribute("aria-current", i===cur));
+    ticker.textContent = row.files[cur][0].split("_")[0] + " · " + row.files[cur][0].split("_")[2];
+  }
+  const go = k => { active = ((k % m) + m) % m; render(); };
+
+  // Register each stock for the search bar
+  row.files.forEach(([f], i) => {
+    const sym = f.split("_")[0];
+    INDEX.push({ sym, names: NAMES[sym] || [], row, sec, show(){
+      go(nearest(i)); restart();
+      sec.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+      const el = cards[active];
+      el.classList.remove("found"); void el.offsetWidth; el.classList.add("found");
+      setTimeout(() => el.classList.remove("found"), 1700);
+    }});
+  });
+
+  sec.querySelector(".next").onclick = () => { go(active+1); restart(); };
+  sec.querySelector(".prev").onclick = () => { go(active-1); restart(); };
+  // One click brings a card to the front (or opens the front one full screen);
+  // a double click saves the stock to the favorites, so the full-screen view waits a beat.
+  let lastTap = { k:-1, t:0 }, zoomTimer = null;
+  cards.forEach((el,k) => el.addEventListener("click", () => {
+    if (moved) return;
+    const now = performance.now(), locked = el.classList.contains("locked");
+    if (lastTap.k === k && now - lastTap.t < 320) {
+      lastTap.k = -1; clearTimeout(zoomTimer);
+      if (!locked) Favs.toggle(slots[k].f.split("_")[0], el);
+      return;
+    }
+    lastTap = { k, t:now };
+    if (k === active && !locked) zoomTimer = setTimeout(() => openZoom(el, slots[k].f), 300);
+    else { go(k); restart(); }
+  }));
+  stage.addEventListener("keydown", e => {
+    if (e.key==="ArrowLeft") { go(active+1); restart(); }
+    if (e.key==="ArrowRight") { go(active-1); restart(); }
+  });
+
+  // Drag / swipe
+  let startX = null, moved = false;
+  stage.addEventListener("pointerdown", e => { startX = e.clientX; moved = false; });
+  addEventListener("pointerup", e => {
+    if (startX === null) return;
+    const dx = e.clientX - startX; startX = null;
+    if (Math.abs(dx) > 40) { moved = true; go(active + (dx < 0 ? -1 : 1)); restart(); setTimeout(()=>moved=false,0); }
+  }, sig);
+
+  // Trackpad two-finger horizontal swipe
+  let wheelAcc = 0, wheelLock = false;
+  stage.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if (wheelLock) return;
+    wheelAcc += e.deltaX;
+    if (Math.abs(wheelAcc) > 50) {
+      go(active + (wheelAcc > 0 ? -1 : 1));
+      wheelAcc = 0; wheelLock = true; restart();
+      setTimeout(() => wheelLock = false, 450);
+    }
+  }, { passive:false });
+
+  // Autoplay, staggered per row, paused on hover
+  let timer = null, hover = false;
+  cleanups.push(() => clearInterval(timer));
+  function restart(){ clearInterval(timer); if (!reduce && !sig.signal.aborted) timer = setInterval(()=>{ if(!hover && !zoomOpen && !document.hidden) go(active+1); }, 3800 + ri*600); }
+  sec.addEventListener("mouseenter", ()=>hover=true);
+  sec.addEventListener("mouseleave", ()=>hover=false);
+
+  addEventListener("resize", render, sig);
+  cards[0].querySelector("img").addEventListener("load", render, {once:true});
+  render(); restart();
+});
+}
+buildRows();
+
+// Filter panel: upside up to +50%, risk up to −2% (risk at its max means no limit)
+(() => {
+  const btn = document.getElementById("fbtn"), panel = document.getElementById("fpanel"), dot = document.getElementById("fdot");
+  const up = document.getElementById("fup"), risk = document.getElementById("frisk");
+  const upv = document.getElementById("fupv"), riskv = document.getElementById("friskv"), count = document.getElementById("fcount");
+  const all = ROWS.flatMap(r => r.files);
+  const upMax = 50, riskMax = 2;
+  up.max = upMax; risk.max = riskMax;
+  let t = null;
+  function sync(rebuild){
+    FILTER.up = +up.value;
+    FILTER.risk = +risk.value >= riskMax ? Infinity : +risk.value;
+    upv.textContent = (+up.value > 0 ? "≥ " : "") + "+" + (+up.value).toFixed(1) + "%";
+    riskv.textContent = "−" + (+risk.value).toFixed(2) + "%";
+    count.textContent = all.filter(passes).length;
+    dot.hidden = !filtering(); btn.classList.toggle("on", filtering());
+    if (rebuild) { clearTimeout(t); t = setTimeout(buildRows, 120); }
+  }
+  function reset(){ up.value = 0; risk.value = riskMax; sync(true); }
+  function toggle(open){ panel.hidden = !open; btn.setAttribute("aria-expanded", open); }
+  up.addEventListener("input", () => sync(true));
+  risk.addEventListener("input", () => sync(true));
+  document.getElementById("freset").addEventListener("click", reset);
+  btn.addEventListener("click", () => toggle(panel.hidden));
+  document.addEventListener("pointerdown", e => { if (!e.target.closest(".filter")) toggle(false); });
+  panel.addEventListener("keydown", e => { if (e.key === "Escape") { e.stopPropagation(); toggle(false); btn.focus(); } });
+  up.value = 0; risk.value = riskMax; sync(false);
+})();
+
+// Floating search: match by symbol or company name, jump to the card
+(() => {
+  const q = document.getElementById("q"), list = document.getElementById("results"), clr = document.getElementById("qclear");
+  let hits = [], sel = 0;
+  const norm = s => s.toLowerCase().replace(/['’".\-\s]/g, "");
+  const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  function mark(text, term){
+    const t = term.trim().toLowerCase(), k = text.toLowerCase().indexOf(t);
+    if (!t || k < 0) return esc(text);
+    return esc(text.slice(0,k)) + "<mark>" + esc(text.slice(k,k+t.length)) + "</mark>" + esc(text.slice(k+t.length));
+  }
+  function score(e, t){
+    const s = norm(e.sym);
+    if (s === t) return 0;
+    if (s.startsWith(t)) return 1;
+    if (e.names.some(nm => norm(nm).startsWith(t))) return 2;
+    if (s.includes(t) || e.names.some(nm => norm(nm).includes(t))) return 3;
+    return -1;
+  }
+  function draw(){
+    const raw = q.value, t = norm(raw);
+    clr.hidden = !raw;
+    if (!t) { close(); return; }
+    hits = INDEX.map(e => [score(e,t), e]).filter(([s]) => s >= 0).sort((a,b) => a[0]-b[0]).map(([,e]) => e);
+    sel = 0;
+    list.innerHTML = hits.length ? hits.map((e,k) => {
+      const nm = e.names.find(x => norm(x).includes(t)) || e.names[0] || "";
+      return `<li role="option" id="r${k}" aria-selected="${k===sel}" style="--c:${e.row.color}">
+        <span class="sw"></span><span class="sym">${mark(e.sym, raw)}</span>
+        <span class="nm">${mark(nm, raw)}</span><span class="grp">${esc(e.row.title)}</span></li>`;
+    }).join("") : `<li class="empty">לא נמצאה מניה בשם הזה בכרטיסים של היום</li>`;
+    list.hidden = false;
+    q.setAttribute("aria-expanded", "true");
+    q.setAttribute("aria-activedescendant", hits.length ? "r0" : "");
+  }
+  function close(){ list.hidden = true; q.setAttribute("aria-expanded", "false"); }
+  function pick(k){
+    const e = hits[k]; if (!e) return;
+    q.value = e.sym; clr.hidden = false; close(); q.blur();
+    e.show();
+  }
+  function move(d){
+    if (!hits.length) return;
+    sel = (sel + d + hits.length) % hits.length;
+    list.querySelectorAll("li").forEach((li,k) => li.setAttribute("aria-selected", k===sel));
+    q.setAttribute("aria-activedescendant", "r"+sel);
+    list.children[sel].scrollIntoView({ block:"nearest" });
+  }
+  q.addEventListener("input", draw);
+  q.addEventListener("focus", () => { if (q.value) draw(); });
+  q.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); move(1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); move(-1); }
+    else if (e.key === "Enter") { e.preventDefault(); pick(sel); }
+    else if (e.key === "Escape") { e.stopPropagation(); q.value = ""; draw(); q.blur(); }
+  });
+  list.addEventListener("pointerdown", e => e.preventDefault());   // keep focus while picking
+  list.addEventListener("click", e => { const li = e.target.closest("li[role=option]"); if (li) pick(+li.id.slice(1)); });
+  clr.addEventListener("click", () => { q.value = ""; draw(); q.focus(); });
+  document.addEventListener("pointerdown", e => { if (!e.target.closest(".search")) close(); });
+  addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement !== q && !zoomOpen) { e.preventDefault(); q.focus(); }
+  });
+})();
+
+// Full-screen view: the card grows to fill the screen and turns to its text card.
+// A second click turns it back to the chart and shrinks it into the wheel.
+const zoom = document.getElementById("zoom"), zcard = zoom.querySelector(".zcard");
+let zSource = null, zBusy = false;
+function place(r){ Object.assign(zcard.style, { left:r.left+"px", top:r.top+"px", width:r.width+"px", height:r.height+"px" }); }
+function fullRect(){
+  const pad = 16;
+  let h = innerHeight - pad*2 - 24, w = h / 2;
+  if (w > innerWidth - pad*2) { w = innerWidth - pad*2; h = w * 2; }
+  return { left:(innerWidth-w)/2, top:(innerHeight-24-h)/2, width:w, height:h };
+}
+function openZoom(el, base){
+  if (zBusy || zoomOpen) return;
+  const sym = base.split("_")[0];
+  zoom.querySelector(".zf").src = `img/${base}_card.webp`;
+  zoom.querySelector(".zf").alt = "גרף " + sym;
+  zoom.querySelector(".zb").src = `img/${base}_info.webp`;
+  zoom.querySelector(".zb").alt = "ניתוח טקסט של " + sym;
+  zSource = el; zoomOpen = true; zBusy = true;
+  zcard.style.transition = "none";
+  place(el.getBoundingClientRect());
+  zoom.hidden = false;
+  el.style.visibility = "hidden";
+  document.documentElement.style.overflow = "hidden";
+  zcard.offsetWidth;                 // commit the start position before animating
+  zcard.style.transition = "";
+  requestAnimationFrame(() => {
+    zoom.classList.add("on", "flipped");
+    place(fullRect());
+    setTimeout(() => zBusy = false, reduce ? 0 : 650);
+  });
+  zoom.focus?.();
+}
+function closeZoom(){
+  if (zBusy || !zoomOpen) return;
+  zBusy = true;
+  zoom.classList.remove("on", "flipped");
+  place(zSource.getBoundingClientRect());
+  setTimeout(() => {
+    zoom.hidden = true;
+    zSource.style.visibility = "";
+    document.documentElement.style.overflow = "";
+    zoomOpen = false; zBusy = false;
+  }, reduce ? 0 : 820);
+}
+zoom.addEventListener("click", closeZoom);
+addEventListener("keydown", e => { if (e.key === "Escape") closeZoom(); });
+addEventListener("resize", () => { if (zoomOpen && !zBusy) { zcard.style.transition = "none"; place(fullRect()); zcard.offsetWidth; zcard.style.transition = ""; } });
+
+// Background: drifting cyan dust through soft light beams, moving with scroll
+(() => {
+  const cv = document.getElementById("sky"), ctx = cv.getContext("2d");
+  const night = cv.parentElement;
+  let W, H, dpr, parts = [], beams = [];
+  function size(){
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    const count = Math.round(W*H/2600);
+    parts = Array.from({length:count}, () => ({
+      x:Math.random()*W, y:Math.random()*H, z:Math.random(),
+      tw:Math.random()*Math.PI*2, vx:(Math.random()-.5)*.08
+    }));
+    beams = Array.from({length:7}, (_,i) => ({ x:(i+.5)/7*W + (Math.random()-.5)*80, w:40+Math.random()*120, a:.03+Math.random()*.05, ph:Math.random()*6 }));
+  }
+  let lastScroll = scrollY, flow = 0, t = 0;
+  function frame(){
+    t += 1/60;
+    const ds = scrollY - lastScroll; lastScroll = scrollY; flow += ds;
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#07131c"); g.addColorStop(.55,"#050d15"); g.addColorStop(1,"#03070c");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    const rg = ctx.createRadialGradient(W/2,H*.35,0,W/2,H*.35,Math.max(W,H)*.6);
+    rg.addColorStop(0,"rgba(40,120,140,.22)"); rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = rg; ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation = "lighter";
+    for (const b of beams){
+      const a = b.a*(.6+.4*Math.sin(t*.4+b.ph));
+      const lg = ctx.createLinearGradient(b.x-b.w,0,b.x+b.w,0);
+      lg.addColorStop(0,"rgba(120,210,230,0)"); lg.addColorStop(.5,`rgba(120,210,230,${a})`); lg.addColorStop(1,"rgba(120,210,230,0)");
+      const vg = ctx.createLinearGradient(0,0,0,H);
+      ctx.fillStyle = lg; ctx.fillRect(b.x-b.w,0,b.w*2,H);
+    }
+    for (const p of parts){
+      const sp = .15 + p.z*.55;
+      p.y += reduce ? 0 : sp*.35;
+      p.x += reduce ? 0 : p.vx;
+      p.tw += .03;
+      let y = (p.y - flow*(.15+p.z*.5)) % H; if (y < 0) y += H;
+      let x = p.x % W; if (x < 0) x += W;
+      const r = .4 + p.z*1.8;
+      const al = (.25 + p.z*.6) * (.6+.4*Math.sin(p.tw));
+      if (p.z > .8){
+        ctx.fillStyle = `rgba(90,220,240,${al*.15})`;
+        ctx.beginPath(); ctx.arc(x,y,r*4,0,7); ctx.fill();
+      }
+      ctx.fillStyle = `rgba(150,230,245,${al})`;
+      ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  size(); addEventListener("resize", size);
+  if (reduce) addEventListener("scroll", () => requestAnimationFrame(frame), {passive:true});
+  frame();
+})();
+</script>
+
+
+</body></html>

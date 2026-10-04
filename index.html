@@ -1,0 +1,117 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>TradeScout site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@500;700&display=swap">
+<style>
+  :root{
+    --ground:#050b12; --bar:rgba(5,11,18,.94); --line:rgba(160,220,235,.12);
+    --idle:#8fa3b0; --ink:#e8eef3;
+    --home:#2f6bff; --feed:#26a69a; --fg:#ff6ec7; --market:#9b8cff; --me:#ffd166;
+    --nav-h:62px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;background:var(--ground);color:var(--ink);overflow:hidden}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+
+  .views{position:fixed;inset-inline:0;top:env(safe-area-inset-top,0px);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));background:var(--ground)}
+  .views iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:var(--ground)}
+
+  nav{position:fixed;inset-inline:0;bottom:0;z-index:10;height:calc(var(--nav-h) + env(safe-area-inset-bottom,0px));
+    padding-bottom:env(safe-area-inset-bottom,0px);display:flex;justify-content:space-around;align-items:stretch;
+    background:var(--bar);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    box-shadow:0 -1px 0 var(--line),0 -18px 40px rgba(0,0,0,.35);padding-inline:8px}
+  nav a{flex:1;max-width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    color:var(--idle);text-decoration:none;-webkit-tap-highlight-color:transparent;position:relative}
+  nav svg{width:26px;height:26px;display:block;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.3,1.6,.5,1),filter .35s,color .25s}
+  nav svg .fill{fill:transparent;transition:fill .25s}
+  nav a::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--c);opacity:0;transform:scale(0);
+    transition:opacity .25s,transform .35s cubic-bezier(.3,1.6,.5,1);box-shadow:0 0 8px var(--c)}
+  nav a:hover{color:#c6d4dc}
+  nav a[aria-current="page"]{color:var(--c)}
+  nav a[aria-current="page"] svg{transform:scale(1.08);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--c) 70%,transparent))}
+  nav a[aria-current="page"] svg .fill{fill:color-mix(in srgb,var(--c) 28%,transparent)}
+  nav a[aria-current="page"]::after{opacity:1;transform:scale(1)}
+  nav a:focus-visible{outline:2px solid var(--c);outline-offset:-6px;border-radius:14px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  @media (prefers-reduced-motion:reduce){ nav svg,nav a::after{transition:none} }
+</style>
+
+<div class="views" id="views"></div>
+
+<nav aria-label="ניווט ראשי">
+  <a href="#home" data-page="home" style="--c:var(--home)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path class="fill" d="M3.5 10.2 12 3.2l8.5 7V19.5a1.5 1.5 0 0 1-1.5 1.5h-4.2v-6.2H9.2V21H5a1.5 1.5 0 0 1-1.5-1.5z"/>
+    </svg>
+    <span class="sr">בית · כרטיסי מניות</span>
+  </a>
+  <a href="#feed" data-page="feed" style="--c:var(--feed)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect class="fill" x="2.8" y="2.8" width="18.4" height="18.4" rx="5.2"/>
+      <path d="M2.8 8.3h18.4M8.4 2.9l3 5.4M14.4 2.9l3 5.4"/>
+      <path d="M10.2 11.6v5.6l4.8-2.8z" fill="currentColor" stroke-width="1.4"/>
+    </svg>
+    <span class="sr">פיד · TradeScout Shorts</span>
+  </a>
+  <a href="#fg" data-page="fg" style="--c:var(--fg)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path class="fill" d="M2.8 17.5a9.2 9.2 0 1 1 18.4 0z" stroke="none"/>
+      <path d="M2.8 17.5a9.2 9.2 0 0 1 18.4 0"/>
+      <path d="M5.6 11.4l1.2.9M12 8.3v1.4M18.4 11.4l-1.2.9"/>
+      <path d="M12 17.5l3.6-4.6"/>
+      <circle cx="12" cy="17.5" r="1.5" fill="currentColor"/>
+    </svg>
+    <span class="sr">סנטימנט שוק</span>
+  </a>
+  <a href="#market" data-page="market" style="--c:var(--market)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path class="fill" d="M3.4 20.4V15h3.7v5.4zM10.1 20.4V9.6h3.8v10.8zM16.9 20.4v-7.6h3.7v7.6z"/>
+      <path d="M2.6 20.6h18.8"/>
+      <path d="M4.6 11.4 9.2 7l3.4 2.8 6-5.4"/>
+      <path d="M14.6 4.2h4.2v4.1"/>
+    </svg>
+    <span class="sr">ניתוחים היסטוריים</span>
+  </a>
+  <a href="#me" data-page="me" style="--c:var(--me)">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path class="fill" d="M4.2 20.6c.6-4 3.8-6.3 7.8-6.3s7.2 2.3 7.8 6.3z"/>
+      <circle class="fill" cx="12" cy="8.2" r="4.2"/>
+    </svg>
+    <span class="sr">אזור אישי · מועדפים</span>
+  </a>
+</nav>
+
+<script>
+const PAGES = {
+  home:  { src:"home.html",        title:"כרטיסי מניות" },
+  feed:  { src:"shorts/feed.html", title:"TradeScout Shorts" },
+  market:{ src:"market.html",      title:"ניתוחים היסטוריים" },
+  fg:    { src:"sentiment.html",   title:"סנטימנט שוק" },
+  me:    { src:"me.html",          title:"אזור אישי" },
+};
+const views = document.getElementById("views");
+const links = [...document.querySelectorAll("nav a")];
+const frames = {};
+
+// Each page loads on first visit and then stays alive, so its scroll position and state survive switching tabs.
+function show(key){
+  if (!PAGES[key]) key = "home";
+  if (!frames[key]) {
+    const f = document.createElement("iframe");
+    f.src = PAGES[key].src;
+    f.title = PAGES[key].title;
+    views.appendChild(f);
+    frames[key] = f;
+  }
+  for (const k in frames) frames[k].hidden = k !== key;
+  links.forEach(a => a.dataset.page === key ? a.setAttribute("aria-current","page") : a.removeAttribute("aria-current"));
+  try { frames[key].contentWindow.focus(); } catch {}
+}
+const route = () => show(location.hash.slice(1));
+addEventListener("hashchange", route);
+route();
+</script>
+
+</body></html>

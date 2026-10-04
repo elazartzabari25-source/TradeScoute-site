@@ -1,0 +1,616 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>סנטימנט שוק</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#e6e8eb; --ink:#12161d; --muted:#5d6572;
+    --panel:#0e1117; --teal:#26a69a; --blue:#2f6bff; --pink:#ff6ec7; --violet:#9b8cff;
+    --night:#050b12; --night-ink:#e8eef3; --night-muted:#8fa3b0; --night-line:rgba(160,220,235,.1);
+    --up:#2ec27e; --down:#ef4444; --flat:#1b2530;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+    --display:"Unbounded","Heebo",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;direction:rtl;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{padding-inline:16px;max-width:1400px;margin:0 auto;width:100%}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:24px 22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:64px;height:64px;border-radius:16px;background:#000;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(14,17,23,.18)}
+  .logo img{width:100%;height:100%;display:block;object-fit:cover}
+  .brand h1{margin:0;font-family:var(--display);font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1;direction:ltr}
+  .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .date{font-family:var(--mono);font-size:13px;color:var(--muted);direction:ltr}
+
+  .night{position:relative;flex:1;background:var(--night);color:var(--night-ink);border-radius:34px 34px 0 0;overflow:clip;isolation:isolate}
+  .night canvas#sky{position:sticky;top:0;display:block;width:100%;height:100vh;margin-bottom:-100vh;z-index:-1;pointer-events:none}
+  .night .wrap{padding-block:30px 0}
+
+  /* Summary: index-level read before the map */
+  .pulse{display:flex;align-items:flex-end;justify-content:space-between;gap:18px 28px;flex-wrap:wrap}
+  .pulse h2{margin:0;font-size:clamp(22px,2.8vw,30px);font-weight:700;display:flex;align-items:center;gap:10px;text-wrap:balance}
+  .pulse h2 .sw{width:10px;height:10px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px var(--teal)}
+  .pulse .lede{margin:8px 0 0;color:#b9c8d1;font-size:15px;line-height:1.6;max-width:62ch}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--night-line);min-width:112px}
+  .stat small{display:block;font-size:12px;color:var(--night-muted);letter-spacing:.02em}
+  .stat b{display:block;margin-top:2px;font-family:var(--mono);font-size:19px;font-weight:700;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--up)} .neg{color:var(--down)}
+
+  /* Controls */
+  .controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:24px}
+  .seg{display:inline-flex;padding:4px;border-radius:14px;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--night-line);gap:2px}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--night-muted);font:500 14px "Heebo",system-ui,sans-serif;padding:7px 13px;border-radius:10px;cursor:pointer;transition:background .2s,color .2s}
+  .seg button:hover{color:#dbe6ec}
+  .seg button[aria-pressed="true"]{background:#16212c;color:#fff;box-shadow:inset 0 0 0 1px rgba(38,166,154,.45)}
+  .seg button:focus-visible,.crumb button:focus-visible,.search input:focus-visible,.chip:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .group{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .search{position:relative}
+  .search input{width:190px;max-width:100%;background:rgba(255,255,255,.04);border:0;box-shadow:inset 0 0 0 1px var(--night-line);color:#fff;border-radius:12px;padding:9px 34px 9px 12px;font:500 14px "Heebo",system-ui,sans-serif;direction:ltr;text-align:left}
+  .search input::placeholder{color:#6f8593}
+  .search svg{position:absolute;right:11px;top:50%;translate:0 -50%;width:15px;height:15px;stroke:var(--night-muted);fill:none;stroke-width:2}
+
+  /* Sector chips */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .chip{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--night-line);color:#d6e2e9;font:500 13px "Heebo",system-ui,sans-serif;transition:background .2s}
+  .chip:hover{background:rgba(255,255,255,.08)}
+  .chip[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--teal);background:rgba(38,166,154,.12)}
+  .chip i{font-style:normal;font-family:var(--mono);font-size:12px;direction:ltr;unicode-bidi:isolate}
+  .chip::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--c)}
+
+  .crumb{display:flex;align-items:center;gap:10px;min-height:34px;margin-top:18px;font-size:14px;color:var(--night-muted)}
+  .crumb button{appearance:none;border:0;background:#16212c;color:#fff;font:500 13px "Heebo",sans-serif;padding:6px 12px;border-radius:10px;cursor:pointer}
+  .crumb b{color:#fff}
+
+  /* Map */
+  .map-shell{margin-top:10px;border-radius:18px;padding:3px;background:#0a121b;box-shadow:inset 0 0 0 1px var(--night-line),0 30px 60px rgba(0,0,0,.35)}
+  #map{position:relative;width:100%;direction:ltr;overflow:hidden;border-radius:15px;user-select:none}
+  .sec{position:absolute;box-shadow:inset 0 0 0 1px rgba(5,11,18,.9);background:#070e16}
+  .sec-h{position:absolute;inset:0 0 auto 0;height:18px;padding:0 6px;display:flex;align-items:center;gap:6px;font:700 11px "Heebo",sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#b9c8d1;white-space:nowrap;overflow:hidden;cursor:zoom-in}
+  .sec-h:hover{color:#fff}
+  .sec-h span{font-family:var(--mono);font-weight:500;letter-spacing:0}
+  .t{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(5,11,18,.85);color:#fff;line-height:1.05;cursor:pointer;transition:filter .15s,opacity .25s}
+  .t:hover{filter:brightness(1.25);z-index:2;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.85)}
+  .t b{font-family:"Heebo",sans-serif;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+  .t span{font-family:var(--mono);font-weight:500;opacity:.92;margin-top:.18em}
+  #map.searching .t{opacity:.18}
+  #map.searching .t.hit{opacity:1;box-shadow:inset 0 0 0 2px #fff}
+
+  .tip{position:fixed;z-index:20;pointer-events:none;width:250px;padding:12px 14px;border-radius:14px;background:rgba(10,18,27,.97);box-shadow:0 0 0 1px rgba(160,220,235,.18),0 18px 40px rgba(0,0,0,.5);color:var(--night-ink);direction:ltr;font-size:13px}
+  .tip .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .tip .tk{font-family:var(--display);font-weight:600;font-size:17px}
+  .tip .nm{color:var(--night-muted);margin-top:2px;font-size:12.5px}
+  .tip dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:10px 0 0}
+  .tip dt{color:var(--night-muted)}
+  .tip dd{margin:0;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  .legend{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:16px;direction:ltr;flex-wrap:wrap}
+  .legend span{min-width:46px;padding:5px 6px;text-align:center;font-family:var(--mono);font-size:12px;color:#fff;border-radius:4px}
+
+
+  /* SSFI breadth panel */
+  .breadth{margin-top:34px;padding:20px 20px 16px;border-radius:18px;background:rgba(255,255,255,.035);box-shadow:inset 0 0 0 1px var(--night-line)}
+  .breadth-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px 24px;flex-wrap:wrap}
+  .breadth h3{margin:0;font-size:clamp(18px,2.2vw,22px);font-weight:700;display:flex;align-items:center;gap:10px}
+  .breadth h3 .sw{width:10px;height:10px;border-radius:50%;background:#4fc3f7;box-shadow:0 0 10px #4fc3f7}
+  .breadth .tag{display:inline-block;margin-top:6px;font-family:var(--mono);font-size:12px;color:var(--night-muted);direction:ltr}
+  .breadth .desc{margin:8px 0 0;color:#b9c8d1;font-size:14px;line-height:1.6;max-width:60ch}
+  .breadth .num{direction:ltr;text-align:left}
+  .breadth .num b{font-family:var(--mono);font-size:clamp(34px,5vw,46px);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+  .breadth .num small{margin-left:6px;font-size:13px;color:var(--night-muted)}
+  .breadth .num div{margin-top:6px;font-family:var(--mono);font-size:15px;font-weight:700}
+  #ssfi,#sstw{display:block;width:100%;height:230px;margin-top:16px;direction:ltr}
+  #ssfi text,#sstw text{font-family:var(--mono);font-size:11px;fill:var(--night-muted)}
+  .breadth .zones{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--night-muted)}
+  .breadth .zones i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px}
+
+  /* Fear & Greed gauge (moved from the fear & greed page) */
+  .fg .gauge-box{position:relative;max-width:620px;margin:6px auto 0}
+  .fg .gauge-box svg{display:block;width:100%;height:auto;overflow:visible;direction:ltr}
+  .fg .gseg-label{font-family:"Heebo",sans-serif;font-weight:800;font-size:16px;letter-spacing:.06em}
+  .fg .tick-label{font-family:var(--mono);font-size:14px;fill:#6f8593}
+  #fg-needle{transition:transform 1.6s cubic-bezier(.2,.9,.25,1.08);transform-origin:300px 300px}
+  .fg .readout{position:absolute;left:50%;bottom:0;transform:translateX(-50%);text-align:center;pointer-events:none}
+  .fg .readout b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(42px,8vw,68px);line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+  .fg .state{direction:ltr;letter-spacing:.06em;display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:5px 14px;border-radius:99px;font-weight:700;font-size:15px;
+    background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent)}
+  .fg .state::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+  .fg h3 .sw{background:var(--c);box-shadow:0 0 10px var(--c)}
+  .fg .updated{margin:14px 0 0;text-align:center;color:var(--night-muted);font-size:13px}
+  .fg .updated span{font-family:var(--mono);direction:ltr;unicode-bidi:isolate;color:#b9c8d1}
+  @media (max-width:420px){ .fg .gseg-label{font-size:19px} }
+  @media (prefers-reduced-motion:reduce){ #fg-needle{transition:none} }
+
+  /* AAII investor sentiment (moved from the fear & greed page) */
+  .aaii{--bull:#2ec27e;--neut:#8d9aa5;--bear:#ef4444;--c:var(--bull)}
+  .aaii h3 .sw{background:var(--c);box-shadow:0 0 10px var(--c)}
+  .aaii .a-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;direction:ltr;margin:18px 0 12px;font-size:14px;color:#b9c8d1}
+  .aaii .a-legend b{font-weight:700;color:#fff;font-size:15px}
+  .aaii .a-legend i{display:inline-flex;align-items:center;gap:7px;font-style:normal}
+  .aaii .a-legend i::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--c)}
+  .aaii .weeks{direction:ltr;display:flex;flex-direction:column;gap:10px}
+  .aaii .wk{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:14px}
+  .aaii .wk-date{font-family:var(--mono);font-size:13px;color:#b9c8d1;white-space:nowrap}
+  .aaii .wk.head .wk-date{color:var(--night-muted);font-family:"Heebo",sans-serif;font-weight:700}
+  .aaii .wk-bar{display:flex;height:54px;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--night-line);background:rgba(255,255,255,.03)}
+  .aaii .sg{display:flex;align-items:center;padding-inline:14px;font-family:var(--mono);font-size:16px;color:#fff;
+    background:color-mix(in srgb,var(--c) 88%,#050b12);min-width:0;white-space:nowrap;overflow:hidden;width:0;transition:width 1.1s cubic-bezier(.2,.9,.25,1.05)}
+  .aaii .sg + .sg{box-shadow:inset 1px 0 0 rgba(5,11,18,.55)}
+  .aaii .wk.now .wk-bar{box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
+  .aaii .wk.now .wk-date{color:#fff;font-weight:700}
+  .aaii .avg-note{margin:16px 0 0;text-align:center;color:var(--night-muted);font-size:13px}
+  .aaii .avg-note b{font-family:var(--mono);color:#b9c8d1;font-weight:500;direction:ltr;unicode-bidi:isolate}
+  @media (max-width:560px){ .aaii .wk{grid-template-columns:78px 1fr;gap:10px} .aaii .wk-date{font-size:11px} .aaii .wk-bar{height:46px} .aaii .sg{padding-inline:8px;font-size:13px} }
+  @media (prefers-reduced-motion:reduce){ .aaii .sg{transition:none} }
+  .src{margin-top:18px;text-align:center;font-size:13px;color:var(--night-muted);line-height:1.6}
+  .src a{color:#b9c8d1}
+  .copy{margin-top:30px;padding-block:22px 28px;border-top:1px solid var(--night-line);display:flex;justify-content:center;align-items:center;gap:8px;direction:ltr;color:#b9c8d1;font-size:14px;letter-spacing:.04em}
+  .copy span{font-family:var(--display);font-weight:600;color:#fff}
+
+  @media (max-width:640px){ .search input{width:150px} .seg button{padding:7px 10px;font-size:13px} .pulse .lede{font-size:14px} }
+  @media (prefers-reduced-motion:reduce){ .t,.chip,.seg button{transition:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><img src="tradescout-logo.png" alt=""></div>
+      <div>
+        <h1>TradeScout</h1>
+        <p>מפת חום · S&amp;P 500 לפי סקטורים</p>
+      </div>
+    </div>
+    <div class="date">04.10.2026 · Stock Heatmap</div>
+  </header>
+</div>
+
+<div class="night">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <main>
+      <section class="pulse">
+        <div>
+          <h2><span class="sw"></span>סנטימנט שוק:</h2>
+          <p class="lede">כל ריבוע הוא חברה במדד. הגודל הוא שווי השוק שלה, והצבע הוא השינוי במחיר. לחיצה על שם סקטור מגדילה אותו, ומעבר עם העכבר על ריבוע מציג את הפרטים.</p>
+        </div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <div class="controls">
+        <div class="group">
+          <div class="seg" role="group" aria-label="טווח זמן" id="tf">
+            <button type="button" data-k="5" aria-pressed="true">יום</button>
+            <button type="button" data-k="6">שבוע</button>
+            <button type="button" data-k="7">חודש</button>
+            <button type="button" data-k="8">מתחילת השנה</button>
+          </div>
+          <div class="seg" role="group" aria-label="גודל ריבוע" id="sz">
+            <button type="button" data-k="cap" aria-pressed="true">שווי שוק</button>
+            <button type="button" data-k="mono">גודל אחיד</button>
+          </div>
+        </div>
+        <label class="search">
+          <span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">חיפוש מניה</span>
+          <input id="q" type="search" placeholder="Search ticker…" autocomplete="off" spellcheck="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        </label>
+      </div>
+
+      <div class="chips" id="chips" aria-label="סקטורים"></div>
+
+      <div class="crumb" id="crumb"></div>
+      <div class="map-shell"><div id="map" role="img" aria-label="מפת חום של מניות S&P 500"></div></div>
+      <div class="legend" id="legend"></div>
+
+      <section class="breadth" aria-labelledby="ssfi-h">
+        <div class="breadth-top">
+          <div>
+            <h3 id="ssfi-h"><span class="sw"></span>SSFI INDEX</h3>
+            <span class="tag">SSFI · S&amp;P Real Estate Stocks Above 50-Day Average</span>
+            <p class="desc">אחוז מניות הנדל"ן ב‑S&amp;P 500 שנסחרות מעל ממוצע 50 הימים שלהן. מתחת ל‑20 נחשב אזור מכירת יתר, ומעל 80 אזור קניית יתר.</p>
+          </div>
+          <div class="num"><b>0.01</b><small>POINT</small><div>0.00 &nbsp;0.00%</div></div>
+        </div>
+        <svg id="ssfi" role="img" aria-label="גרף SSFI בשנה האחרונה: ללא שינוי ב‑0.01, השפל של השנה"></svg>
+        <div class="zones"><span><i style="background:rgba(46,194,126,.35)"></i>מכירת יתר (מתחת ל‑20)</span><span><i style="background:rgba(239,68,68,.35)"></i>קניית יתר (מעל 80)</span><span>שנה אחרונה · TradingView</span></div>
+      </section>
+      <section class="breadth" aria-labelledby="sstw-h">
+        <div class="breadth-top">
+          <div>
+            <h3 id="sstw-h"><span class="sw"></span>SSTW INDEX</h3>
+            <span class="tag">SSTW · S&amp;P Real Estate Stocks Above 20-Day Average</span>
+            <p class="desc">אחוז מניות הנדל"ן ב‑S&amp;P 500 שנסחרות מעל ממוצע 20 הימים שלהן. מדד קצר טווח ורגיש יותר מ‑SSFI. מתחת ל‑20 נחשב אזור מכירת יתר, ומעל 80 אזור קניית יתר.</p>
+          </div>
+          <div class="num"><b>3.33</b><small>POINT</small><div>0.00 &nbsp;0.00%</div></div>
+        </div>
+        <svg id="sstw" class="bchart" role="img" aria-label="גרף SSTW בשנה האחרונה: ללא שינוי ב‑3.33, קרוב לשפל של השנה"></svg>
+        <div class="zones"><span><i style="background:rgba(46,194,126,.35)"></i>מכירת יתר (מתחת ל‑20)</span><span><i style="background:rgba(239,68,68,.35)"></i>קניית יתר (מעל 80)</span><span>שנה אחרונה · TradingView</span></div>
+      </section>
+      <section class="breadth fg" id="fg" aria-labelledby="fg-h">
+        <div class="breadth-top">
+          <div>
+            <h3 id="fg-h"><span class="sw"></span>FEAR &amp; GREED INDEX</h3>
+            <span class="tag">CNN Fear &amp; Greed Index · 0–100</span>
+            <p class="desc">מדד הפחד והחמדנות של CNN משקלל שבעה אינדיקטורים של השוק לציון אחד. מתחת ל‑25 זה פחד קיצוני, ומעל 75 חמדנות קיצונית.</p>
+          </div>
+        </div>
+        <div class="gauge-box">
+          <svg id="fg-gauge" viewBox="0 0 600 330" role="img" aria-label="Fear &amp; Greed Index: 31, Fear"></svg>
+          <div class="readout"><b id="fg-num">0</b></div>
+        </div>
+        <div style="text-align:center"><span class="state" id="fg-state"></span></div>
+        <p class="updated">עודכן לאחרונה: <span>Oct 2, 2026 · 8:00 PM ET (close)</span> · <a href="https://edition.cnn.com/markets/fear-and-greed" target="_blank" rel="noopener" style="color:#b9c8d1">CNN</a></p>
+      </section>
+      <section class="breadth aaii" id="aaii" aria-labelledby="aaii-h">
+        <div class="breadth-top">
+          <div>
+            <h3 id="aaii-h"><span class="sw"></span>AAII · סנטימנט משקיעים</h3>
+            <span class="tag">AAII Investor Sentiment Survey · Week ending 9/30/2026</span>
+            <p class="desc">סקר שבועי של איגוד המשקיעים הפרטיים בארה"ב: כמה אחוזים מהמשקיעים אופטימיים, ניטרליים או פסימיים לגבי השוק בחצי השנה הקרובה.</p>
+          </div>
+        </div>
+        <div class="a-legend">
+          <b>Sentiment Votes</b>
+          <i style="--c:var(--bull)">Bullish</i>
+          <i style="--c:var(--neut)">Neutral</i>
+          <i style="--c:var(--bear)">Bearish</i>
+        </div>
+        <div class="weeks" id="aaii-weeks">
+          <div class="wk head"><div class="wk-date">Week Ending</div><div></div></div>
+        </div>
+        <p class="avg-note">ממוצע היסטורי: <b>Bullish 37.5% · Neutral 31.0% · Bearish 31.5%</b> · <a href="https://www.aaii.com/sentimentsurvey" target="_blank" rel="noopener" style="color:#b9c8d1">AAII</a></p>
+      </section>
+    </main>
+    <p class="src">נתונים: TradingView · <span id="asof"></span> · סיווג סקטורים של TradingView · <a href="https://www.tradingview.com/heatmap/stock/" target="_blank" rel="noopener nofollow">למפה החיה ב‑TradingView</a></p>
+    <footer class="copy">© <span>Eldar &amp; Elazar</span></footer>
+  </div>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+// [ticker, name, sector, industry, capB, chg1D, chgW, chg1M, chgYTD, price]
+const DATA = [["NVDA","NVIDIA Corporation","Electronic Technology","Semiconductors",5638.2,1.34,3.92,6.93,23.24,233.95],["AAPL","Apple Inc.","Electronic Technology","Telecommunications Equipment",4869.9,1.02,-0.7,2.09,22.57,333.69],["GOOG","Alphabet Inc. Class C","Technology Services","Internet Software/Services",4183.6,1.62,0.42,2.9,7.17,340.35],["MSFT","Microsoft Corporation","Technology Services","Packaged Software",3842.9,0.92,3.71,3.54,6.84,517.53],["AMZN","Amazon.com, Inc.","Retail Trade","Internet Retail",2713.0,1.33,1.19,-1.08,8.72,251.52],["META","Meta Platforms Inc Class A","Technology Services","Internet Software/Services",1854.8,0.3,-5.3,25.79,9.86,728.08],["AVGO","Broadcom Inc.","Electronic Technology","Semiconductors",1695.3,3.35,0.71,-3.93,0.67,355.14],["TSLA","Tesla, Inc.","Consumer Durables","Motor Vehicles",1463.7,4.65,-3.65,2.82,-19.05,370.59],["MU","Micron Technology, Inc.","Electronic Technology","Semiconductors",1214.0,-2.05,-1.91,15.48,264.22,1074.89],["LLY","Eli Lilly and Company","Health Technology","Pharmaceuticals: Major",1075.8,-0.61,-3.58,-1.83,6.17,1142.85],["AMD","Advanced Micro Devices, Inc.","Electronic Technology","Semiconductors",1034.8,2.95,-0.1,37.95,189.59,633.91],["BRK.B","Berkshire Hathaway Inc. Class B","Finance","Property/Casualty Insurance",968.0,0.43,-0.51,-0.16,0.34,502.65],["JPM","JPMorgan Chase & Co.","Finance","Major Banks",883.5,-0.24,-2.46,-7.04,3.06,332.38],["WMT","Walmart Inc.","Retail Trade","Specialty Stores",827.2,0.0,-2.63,-1.61,-6.43,104.26],["XOM","Exxonmobil Holdings Corporation","Energy Minerals","Integrated Oil",674.4,0.12,2.36,0.05,36.57,164.01],["V","Visa Inc. Class A","Finance","Finance/Rental/Leasing",673.4,0.23,-1.46,-3.57,3.08,360.66],["INTC","Intel Corporation","Electronic Technology","Semiconductors",630.8,-0.56,-5.91,34.31,215.94,119.33],["JNJ","Johnson & Johnson","Health Technology","Pharmaceuticals: Major",617.0,-1.02,-5.77,-6.81,23.79,256.03],["MA","Mastercard Incorporated Class A","Finance","Finance/Rental/Leasing",483.8,0.41,-2.61,-5.43,-3.23,552.26],["ABBV","AbbVie, Inc.","Health Technology","Pharmaceuticals: Major",464.4,1.11,-1.01,0.05,14.9,262.82],["PLTR","Palantir Technologies Inc. Class A","Technology Services","Packaged Software",453.6,-0.68,-2.05,6.64,4.11,188.75],["CSCO","Cisco Systems, Inc.","Electronic Technology","Telecommunications Equipment",442.4,3.16,4.87,1.71,46.39,112.2],["LRCX","Lam Research Corporation","Producer Manufacturing","Industrial Machinery",434.9,2.17,12.39,19.21,95.38,347.49],["ORCL","Oracle Corporation","Technology Services","Packaged Software",430.3,3.06,2.69,1.45,-27.94,142.3],["AMAT","Applied Materials, Inc.","Producer Manufacturing","Industrial Machinery",428.6,2.03,12.77,21.77,102.2,540.04],["CVX","Chevron Corporation","Energy Minerals","Integrated Oil",408.4,-0.2,1.42,-1.81,35.83,206.69],["COST","Costco Wholesale Corporation","Retail Trade","Specialty Stores",408.1,0.62,3.79,-1.9,6.91,920.65],["CAT","Caterpillar Inc.","Producer Manufacturing","Trucks/Construction/Farm Machinery",388.6,2.31,3.56,8.59,46.37,845.42],["BAC","Bank of America Corp","Finance","Major Banks",375.9,0.04,-4.55,-13.7,-2.33,53.75],["KO","Coca-Cola Company","Consumer Non-Durables","Beverages: Non-Alcoholic",368.5,-0.52,-2.85,-2.55,22.62,85.65],["DELL","Dell Technologies, Inc. Class C","Electronic Technology","Computer Processing Hardware",357.7,3.84,2.97,21.74,338.1,562.52],["MRK","Merck & Co., Inc.","Health Technology","Pharmaceuticals: Major",356.0,0.34,-2.54,-4.75,36.74,144.3],["PG","Procter & Gamble Company","Consumer Non-Durables","Household/Personal Care",336.6,0.67,-0.73,-1.03,1.26,144.91],["UNH","UnitedHealth Group Incorporated","Health Services","Managed Health Care",333.8,1.83,-1.08,-6.86,12.39,371.9],["PANW","Palo Alto Networks, Inc.","Technology Services","Packaged Software",329.9,1.76,3.94,16.54,118.19,403.24],["GE","GE Aerospace","Electronic Technology","Aerospace & Defense",321.2,-0.91,-3.83,-7.14,-0.06,309.56],["MS","Morgan Stanley","Finance","Investment Managers",298.9,1.22,-3.87,-10.22,6.61,190.31],["PM","Philip Morris International Inc.","Consumer Non-Durables","Tobacco",292.2,-0.38,-1.62,0.05,16.97,187.46],["HD","Home Depot, Inc.","Retail Trade","Home Improvement Chains",282.2,0.14,-3.36,-12.02,-17.64,282.85],["NFLX","Netflix, Inc.","Technology Services","Internet Software/Services",279.2,-1.16,-6.38,-16.75,-28.76,67.06],["CRWD","CrowdStrike Holdings, Inc. Class A","Technology Services","Packaged Software",276.5,1.48,4.05,26.06,127.88,270.04],["KLAC","KLA Corporation","Electronic Technology","Semiconductors",270.0,3.27,10.44,20.45,64.24,206.89],["TXN","Texas Instruments Incorporated","Electronic Technology","Semiconductors",268.3,4.44,8.57,15.97,67.92,293.8],["GEV","GE Vernova Inc.","Producer Manufacturing","Electrical Products",263.3,0.13,2.85,10.04,49.53,988.7],["GS","Goldman Sachs Group, Inc.","Finance","Investment Banks/Brokers",262.8,0.66,-2.69,-10.61,2.1,902.56],["ANET","Arista Networks Inc","Electronic Technology","Computer Peripherals",261.5,1.4,-0.72,10.29,54.68,207.35],["SNDK","Sandisk Corporation","Electronic Technology","Computer Peripherals",251.8,-3.79,-4.02,12.3,603.9,1719.99],["RTX","RTX Corporation","Electronic Technology","Aerospace & Defense",248.9,-0.18,-1.8,-10.73,0.64,184.68],["WFC","Wells Fargo & Company","Finance","Major Banks",243.3,0.25,-2.24,-8.32,-13.77,80.45],["TMO","Thermo Fisher Scientific Inc.","Health Technology","Medical Specialties",242.1,0.35,-3.35,8.84,12.99,654.8],["MRVL","Marvell Technology, Inc.","Electronic Technology","Semiconductors",238.8,1.57,3.31,32.66,213.92,272.29],["LIN","Linde plc","Process Industries","Chemicals: Specialty",221.0,2.14,2.95,-1.74,12.48,479.48],["AMGN","Amgen Inc.","Health Technology","Biotechnology",217.9,-1.04,-1.28,-8.54,22.59,403.04],["C","Citigroup Inc.","Finance","Major Banks",215.6,1.18,-3.27,-3.96,9.63,128.5],["APH","Amphenol Corporation Class A","Electronic Technology","Electronic Components",214.4,1.51,3.64,8.66,26.84,86.96],["IBM","International Business Machines Corporation","Technology Services","Information Technology Services",209.8,-1.32,-1.55,-3.43,-25.18,222.64],["AXP","American Express Company","Finance","Finance/Rental/Leasing",204.5,0.23,-1.37,-7.14,-18.06,302.78],["ADI","Analog Devices, Inc.","Electronic Technology","Semiconductors",202.1,3.1,9.34,17.3,51.65,417.15],["QCOM","QUALCOMM Incorporated","Electronic Technology","Semiconductors",194.2,1.53,-5.21,11.34,6.37,184.87],["STX","Seagate Technology Holdings PLC","Electronic Technology","Computer Peripherals",193.1,-10.21,-8.15,5.35,201.09,848.99],["CRM","Salesforce, Inc.","Technology Services","Packaged Software",193.1,-0.84,-0.99,-9.52,-11.44,234.69],["VZ","Verizon Communications Inc.","Communications","Wireless Telecommunications",190.8,-0.13,-2.76,-9.06,12.63,45.92],["DE","Deere & Company","Producer Manufacturing","Trucks/Construction/Farm Machinery",185.2,2.96,-1.15,1.32,47.42,687.0],["GILD","Gilead Sciences, Inc.","Health Technology","Biotechnology",179.5,-1.87,-3.54,-3.51,18.16,144.74],["DIS","Walt Disney Company","Consumer Services","Movies/Entertainment",176.5,0.85,-2.81,-4.24,-9.92,102.19],["TMUS","T-Mobile US, Inc.","Communications","Wireless Telecommunications",175.5,1.18,-1.11,-10.85,-19.09,163.64],["BLK","BlackRock, Inc.","Finance","Investment Managers",172.2,-0.44,-1.54,-6.13,-1.1,1059.63],["PEP","PepsiCo, Inc.","Consumer Non-Durables","Food: Specialty/Candy",171.8,0.23,-1.46,-10.25,-12.1,125.89],["ETN","Eaton Corp. Plc","Producer Manufacturing","Electrical Products",169.4,-0.27,-1.87,11.46,34.93,436.11],["ABT","Abbott Laboratories","Health Technology","Medical Specialties",168.7,0.84,-3.28,-10.81,-21.81,97.5],["SCHW","Charles Schwab Corp","Finance","Investment Banks/Brokers",167.2,-1.7,-2.83,-10.88,-3.08,96.7],["T","AT&T Inc","Communications","Wireless Telecommunications",166.5,0.0,-4.29,-6.86,-1.98,24.3],["UNP","Union Pacific Corporation","Transportation","Railroads",165.3,2.15,1.92,-4.58,20.29,278.28],["WELL","Welltower Inc.","Finance","Real Estate Investment Trusts",164.1,0.34,-2.62,-5.4,22.68,227.71],["MCD","McDonald's Corporation","Consumer Services","Restaurants",164.1,0.03,-2.07,-11.48,-24.04,231.89],["NEE","NextEra Energy, Inc.","Utilities","Electric Utilities",160.3,0.63,1.4,-6.94,-4.5,76.83],["PFE","Pfizer Inc.","Health Technology","Pharmaceuticals: Major",158.5,-1.14,-2.28,-3.44,11.29,27.8],["BA","Boeing Company","Electronic Technology","Aerospace & Defense",153.0,0.67,-2.12,-6.49,-11.27,193.56],["COP","ConocoPhillips","Energy Minerals","Oil & Gas Production",152.3,-0.24,-0.51,-6.08,35.4,126.75],["DHR","Danaher Corporation","Health Technology","Medical Specialties",150.5,1.09,-4.17,3.03,-6.45,214.06],["IBKR","Interactive Brokers Group, Inc. Class A","Finance","Investment Banks/Brokers",150.2,2.9,-1.89,-1.89,34.99,88.3],["WDC","Western Digital Corporation","Electronic Technology","Computer Peripherals",149.7,-10.22,-8.78,-6.66,134.36,415.29],["TJX","TJX Companies Inc","Retail Trade","Apparel/Footwear Retail",145.9,-0.68,1.73,-0.51,-13.42,132.68],["GLW","Corning Inc","Electronic Technology","Electronic Components",141.4,2.35,5.25,14.22,84.67,164.19],["UBER","Uber Technologies, Inc.","Transportation","Other Transportation",139.1,0.34,-1.67,-10.44,-16.98,68.11],["NOW","ServiceNow, Inc.","Technology Services","Packaged Software",138.9,-2.45,-2.09,-4.22,-12.22,134.38],["BX","Blackstone Inc.","Finance","Investment Managers",138.8,-0.44,-4.89,-17.93,-27.97,111.75],["ISRG","Intuitive Surgical, Inc.","Health Technology","Medical Specialties",138.5,-2.32,-1.43,6.22,-30.85,391.95],["FTNT","Fortinet, Inc.","Technology Services","Information Technology Services",132.8,1.25,2.06,11.57,126.27,180.95],["VRTX","Vertex Pharmaceuticals Incorporated","Health Technology","Pharmaceuticals: Major",127.9,-0.4,-3.41,-8.63,11.09,504.73],["CB","Chubb Limited","Finance","Property/Casualty Insurance",127.7,-0.12,-1.3,-2.45,6.58,330.89],["PLD","Prologis, Inc.","Finance","Real Estate Investment Trusts",124.9,0.57,-3.76,-6.97,0.92,128.91],["BMY","Bristol-Myers Squibb Company","Health Technology","Pharmaceuticals: Major",124.9,-0.5,-0.97,-8.48,14.92,61.15],["PH","Parker-Hannifin Corporation","Producer Manufacturing","Industrial Machinery",122.7,0.69,-0.15,1.64,10.32,972.55],["PGR","Progressive Corporation","Finance","Multi-Line Insurance",122.2,-0.31,3.86,-4.91,-1.88,210.31],["NEM","Newmont Corporation","Non-Energy Minerals","Precious Metals",121.8,0.78,-4.5,-7.53,14.43,115.56],["ACN","Accenture Plc Class A","Technology Services","Information Technology Services",121.7,-6.31,12.29,6.76,-26.0,198.9],["BKNG","Booking Holdings Inc.","Consumer Services","Other Consumer Services",119.5,-0.79,0.52,-19.14,-25.79,159.02],["COF","Capital One Financial Corp","Finance","Major Banks",119.5,0.12,-1.2,-8.03,-20.31,194.72],["MPC","Marathon Petroleum Corporation","Energy Minerals","Oil Refining/Marketing",118.6,0.52,9.7,11.03,159.34,422.33],["VLO","Valero Energy Corporation","Energy Minerals","Oil Refining/Marketing",117.0,-0.53,7.49,12.89,148.88,406.3],["LMT","Lockheed Martin Corporation","Electronic Technology","Aerospace & Defense",116.6,-0.02,-3.57,-7.37,4.59,505.41],["SPGI","S&P Global, Inc.","Commercial Services","Financial Publishing/Services",113.9,-0.49,-3.97,-11.81,-21.74,386.27],["MO","Altria Group, Inc.","Consumer Non-Durables","Tobacco",112.5,0.6,-1.68,-3.23,16.81,67.35],["CVS","CVS Health Corporation","Retail Trade","Drugstore Chains",110.6,1.48,1.3,-11.61,9.06,86.46],["MDT","Medtronic Plc","Health Technology","Medical Specialties",110.5,-0.07,-1.4,-6.36,-10.06,86.38],["SBUX","Starbucks Corporation","Consumer Services","Restaurants",108.0,-0.18,0.65,-10.8,12.46,94.71],["SYK","Stryker Corporation","Health Technology","Medical Specialties",105.6,0.9,2.04,-12.58,-21.59,275.43],["PSX","Phillips 66","Energy Minerals","Oil Refining/Marketing",105.6,0.13,4.71,5.79,105.1,264.58],["MCK","McKesson Corporation","Distribution Services","Medical Distributors",105.2,0.38,4.31,-1.31,10.3,902.28],["FCX","Freeport-McMoRan, Inc.","Non-Energy Minerals","Other Metals/Minerals",103.5,3.98,0.25,-1.37,39.28,72.04],["ADP","Automatic Data Processing, Inc.","Technology Services","Packaged Software",102.1,-2.38,-1.61,-8.95,0.25,257.68],["TT","Trane Technologies plc","Producer Manufacturing","Industrial Machinery",102.1,1.08,4.39,5.07,18.68,463.91],["PWR","Quanta Services, Inc.","Industrial Services","Engineering & Construction",101.7,2.11,4.56,11.08,59.21,676.56],["LOW","Lowe's Companies, Inc.","Retail Trade","Home Improvement Chains",101.4,-0.87,-4.01,-10.05,-25.13,180.8],["HOOD","Robinhood Markets, Inc. Class A","Finance","Investment Banks/Brokers",101.4,1.43,-7.31,8.7,-2.37,112.74],["EQIX","Equinix, Inc.","Finance","Real Estate Investment Trusts",101.2,1.32,-1.77,0.72,33.88,1025.72],["DDOG","Datadog, Inc. Class A","Technology Services","Packaged Software",99.5,0.27,5.34,26.32,101.98,277.22],["BNY","Bank of New York Mellon Corp","Finance","Investment Banks/Brokers",98.7,1.03,-3.36,-9.76,25.33,145.4],["LITE","Lumentum Holdings, Inc.","Producer Manufacturing","Electrical Products",97.4,3.79,15.96,25.09,186.1,1085.42],["ABNB","Airbnb, Inc. Class A","Consumer Services","Hotels/Resorts/Cruise lines",97.3,1.22,6.74,-11.38,19.49,162.43],["VRT","Vertiv Holdings Co. Class A","Electronic Technology","Electronic Production Equipment",97.1,2.46,1.2,-1.09,48.81,252.18],["CDNS","Cadence Design Systems, Inc.","Technology Services","Packaged Software",96.8,0.18,8.12,12.39,11.29,351.35],["SO","Southern Company","Utilities","Electric Utilities",96.3,0.3,1.27,-4.85,-3.96,83.72],["CME","CME Group Inc. Class A","Finance","Investment Banks/Brokers",94.6,-0.74,-2.08,-7.87,-3.34,263.14],["JCI","Johnson Controls International plc","Producer Manufacturing","Industrial Machinery",94.6,2.95,6.26,11.6,29.7,156.24],["SNPS","Synopsys, Inc.","Technology Services","Packaged Software",93.9,-0.13,10.09,18.4,2.29,489.9],["MAR","Marriott International, Inc. Class A","Consumer Services","Hotels/Resorts/Cruise lines",93.6,1.18,2.02,6.82,15.59,358.96],["ADBE","Adobe Inc.","Technology Services","Packaged Software",92.5,-1.49,-0.49,-16.16,-32.22,237.69],["HCA","HCA Healthcare Inc","Health Services","Hospital/Nursing Management",92.4,0.78,1.21,3.45,-8.4,426.69],["HWM","Howmet Aerospace Inc.","Electronic Technology","Aerospace & Defense",92.2,1.27,0.12,-10.28,12.55,231.27],["HPE","Hewlett Packard Enterprise Co.","Electronic Technology","Computer Processing Hardware",92.0,7.36,8.92,33.35,185.54,69.33],["CEG","Constellation Energy Corporation","Utilities","Electric Utilities",91.2,-0.55,-1.72,-8.04,-28.08,257.49],["EMR","Emerson Electric Co.","Electronic Technology","Electronic Equipment/Instruments",90.1,1.92,2.49,9.19,21.3,161.61],["APP","AppLovin Corp. Class A","Technology Services","Packaged Software",89.8,-4.65,-14.17,-13.4,-60.75,268.22],["USB","U.S. Bancorp","Finance","Major Banks",89.6,0.26,-1.93,-6.76,7.84,57.51],["GD","General Dynamics Corporation","Electronic Technology","Aerospace & Defense",89.3,-0.79,-1.82,-10.75,-1.92,330.09],["DUK","Duke Energy Corporation","Utilities","Electric Utilities",89.0,0.34,0.88,-5.07,-2.6,114.13],["PNC","PNC Financial Services Group, Inc.","Finance","Major Banks",88.2,0.13,-1.14,-7.46,5.89,221.03],["CSX","CSX Corporation","Transportation","Railroads",87.9,1.91,1.37,-2.87,30.32,47.43],["WMB","Williams Companies, Inc.","Industrial Services","Oil & Gas Pipelines",86.3,1.91,0.26,-6.1,17.35,70.54],["BE","Bloom Energy Corporation Class A","Electronic Technology","Electronic Production Equipment",85.2,4.17,7.13,37.69,219.26,289.15],["ICE","Intercontinental Exchange, Inc.","Finance","Investment Banks/Brokers",84.3,-0.87,-4.11,-5.49,-6.94,150.15],["MNST","Monster Beverage Corporation","Consumer Non-Durables","Beverages: Non-Alcoholic",84.1,1.9,1.06,-5.29,12.01,42.94],["ELV","Elevance Health, Inc.","Health Services","Managed Health Care",83.8,1.25,-3.39,-4.55,10.17,386.43],["MMM","3M Company","Producer Manufacturing","Industrial Conglomerates",83.5,-0.69,-3.96,-5.33,1.12,161.89],["DASH","DoorDash, Inc. Class A","Transportation","Air Freight/Couriers",82.0,3.83,0.71,-16.21,-17.66,189.15],["WM","Waste Management, Inc.","Industrial Services","Environmental Services",81.7,1.26,-1.37,-6.67,-6.79,204.45],["MRSH","Marsh & McLennan Companies, Inc.","Finance","Insurance Brokers/Services",81.2,-1.04,0.06,-9.79,-7.78,170.06],["KKR","KKR & Co Inc","Finance","Investment Managers",81.0,-1.04,-6.0,-15.0,-29.94,90.29],["UPS","United Parcel Service, Inc. Class B","Transportation","Air Freight/Couriers",79.1,-0.93,0.17,-9.95,-6.32,93.02],["WBD","Warner Bros. Discovery, Inc. Series A","Consumer Services","Cable/Satellite TV",77.7,-0.03,0.45,9.02,7.47,30.94],["SHW","Sherwin-Williams Company","Process Industries","Industrial Specialties",77.6,-0.4,-0.48,-4.33,-1.16,319.51],["CTAS","Cintas Corporation","Commercial Services","Miscellaneous Commercial Services",77.3,-1.32,-2.62,-3.77,2.9,193.02],["ECL","Ecolab Inc.","Process Industries","Chemicals: Specialty",76.7,0.9,-0.96,-2.83,4.79,273.7],["CMCSA","Comcast Corporation Class A","Consumer Services","Cable/Satellite TV",76.5,-0.6,-0.87,-18.57,-22.96,21.57],["MCO","Moody's Corporation","Commercial Services","Financial Publishing/Services",76.4,-1.34,-5.36,-10.38,-13.41,441.36],["MRNA","Moderna, Inc.","Health Technology","Biotechnology",75.9,0.57,-2.73,25.5,536.98,190.01],["REGN","Regeneron Pharmaceuticals, Inc.","Health Technology","Pharmaceuticals: Major",75.7,0.05,-8.54,-11.02,-5.04,735.2],["AMT","American Tower Corporation","Finance","Real Estate Investment Trusts",75.6,0.71,-2.85,-7.79,-7.45,162.2],["TRV","Travelers Companies, Inc.","Finance","Property/Casualty Insurance",75.2,-0.35,-0.36,-1.59,24.87,360.38],["INTU","Intuit Inc.","Technology Services","Packaged Software",75.1,-0.6,2.02,-18.83,-57.45,281.08],["ITW","Illinois Tool Works Inc.","Producer Manufacturing","Auto Parts: OEM",74.9,0.8,-3.6,-2.81,6.6,262.92],["MDLZ","Mondelez International, Inc. Class A","Consumer Non-Durables","Food: Specialty/Candy",74.3,0.74,-3.96,-5.61,7.88,58.19],["RCL","Royal Caribbean Group","Consumer Services","Hotels/Resorts/Cruise lines",74.3,2.87,14.86,3.59,-0.27,277.74],["EOG","EOG Resources, Inc.","Energy Minerals","Integrated Oil",74.2,0.05,0.55,-4.08,34.65,141.38],["MSI","Motorola Solutions, Inc.","Electronic Technology","Telecommunications Equipment",74.0,-0.14,-1.65,-9.0,16.72,447.41],["ROST","Ross Stores, Inc.","Retail Trade","Apparel/Footwear Retail",73.0,-2.38,-3.11,-0.81,26.55,228.54],["CMI","Cummins Inc.","Producer Manufacturing","Auto Parts: OEM",72.7,2.19,0.59,-3.06,3.5,528.32],["SLB","SLB Limited","Industrial Services","Contract Drilling",72.3,0.16,-4.56,-13.97,26.89,48.74],["HLT","Hilton Worldwide Holdings Inc.","Consumer Services","Hotels/Resorts/Cruise lines",71.9,1.24,2.02,1.95,11.33,319.36],["CI","Cigna Group","Health Services","Managed Health Care",71.5,0.96,1.65,-4.44,-2.22,270.53],["NSC","Norfolk Southern Corporation","Transportation","Railroads",71.3,2.31,1.56,-4.93,9.88,317.44],["TGT","Target Corporation","Retail Trade","Specialty Stores",70.9,-0.45,0.41,-4.88,59.33,156.0],["MPWR","Monolithic Power Systems, Inc.","Electronic Technology","Semiconductors",70.8,5.79,8.04,17.54,55.21,1439.73],["CVNA","Carvana Co. Class A","Retail Trade","Specialty Stores",70.2,1.16,-0.5,-11.36,-24.39,63.77],["TER","Teradyne, Inc.","Electronic Technology","Electronic Production Equipment",70.2,8.0,13.72,34.44,125.32,449.04],["KMI","Kinder Morgan Inc Class P","Industrial Services","Oil & Gas Pipelines",69.2,1.77,0.19,-3.03,13.02,31.07],["GM","General Motors Company","Consumer Durables","Motor Vehicles",68.7,-1.31,-3.3,-8.61,-3.86,78.27],["ORLY","O'Reilly Automotive, Inc.","Retail Trade","Specialty Stores",68.7,-0.15,-1.39,-3.48,-6.44,84.9],["FDX","FedEx Corporation","Transportation","Air Freight/Couriers",68.7,1.15,3.33,-10.78,24.8,290.36],["NOC","Northrop Grumman Corp.","Electronic Technology","Aerospace & Defense",67.9,-0.83,-6.11,-10.63,-16.08,478.0],["HON","Honeywell International Inc.","Producer Manufacturing","Industrial Machinery",67.8,0.09,1.16,1.6,4.32,213.99],["APO","Apollo Global Management Inc","Finance","Investment Managers",67.3,-0.28,-5.81,-13.13,-21.37,114.02],["URI","United Rentals, Inc.","Finance","Finance/Rental/Leasing",67.3,4.54,6.22,9.14,33.36,1081.04],["CL","Colgate-Palmolive Company","Consumer Non-Durables","Household/Personal Care",67.2,-0.32,-0.98,-6.47,6.75,84.26],["DLR","Digital Realty Trust, Inc.","Finance","Real Estate Investment Trusts",66.2,1.17,-2.13,-2.36,15.46,178.55],["COHR","Coherent Corp.","Electronic Technology","Semiconductors",66.0,5.59,13.13,25.7,79.28,337.04],["KEYS","Keysight Technologies Inc","Electronic Technology","Electronic Equipment/Instruments",65.5,2.88,6.27,20.94,87.35,384.64],["AEP","American Electric Power Company, Inc.","Utilities","Electric Utilities",65.1,-0.15,1.74,-2.59,3.58,119.57],["SPG","Simon Property Group, Inc.","Finance","Real Estate Investment Trusts",65.0,0.07,-2.07,-5.52,8.93,200.95],["RSG","Republic Services, Inc.","Industrial Services","Environmental Services",64.2,1.25,-1.11,-6.18,-0.47,209.56],["TEL","TE Connectivity plc","Electronic Technology","Semiconductors",63.8,1.19,2.39,7.33,-4.36,220.36],["APD","Air Products and Chemicals, Inc.","Process Industries","Chemicals: Specialty",61.8,1.55,-2.16,-9.35,13.16,277.57],["BSX","Boston Scientific Corporation","Health Technology","Medical Specialties",61.7,-1.46,-4.66,-11.08,-55.5,42.6],["NXPI","NXP Semiconductors NV","Electronic Technology","Semiconductors",61.4,1.87,5.39,9.22,10.45,243.66],["FIX","Comfort Systems USA, Inc.","Industrial Services","Engineering & Construction",60.8,2.53,4.33,11.27,84.14,1728.01],["TRGP","Targa Resources Corp.","Utilities","Gas Distributors",60.4,0.87,0.32,-4.36,53.26,281.74],["TDG","TransDigm Group Incorporated","Electronic Technology","Aerospace & Defense",60.3,-0.63,-1.59,-6.06,-17.96,1090.38],["GWW","W.W. Grainger, Inc.","Distribution Services","Wholesale Distributors",60.3,-0.11,1.61,-2.0,27.1,1280.3],["MET","MetLife, Inc.","Finance","Multi-Line Insurance",60.0,0.08,-3.19,-0.38,19.62,94.43],["COR","Cencora, Inc.","Distribution Services","Medical Distributors",59.0,-0.24,0.03,-6.52,-8.34,309.05],["FAST","Fastenal Company","Distribution Services","Wholesale Distributors",58.2,1.05,0.44,4.36,26.06,50.75],["OXY","Occidental Petroleum Corporation","Energy Minerals","Integrated Oil",58.1,0.41,1.76,-3.9,40.83,58.08],["AJG","Arthur J. Gallagher & Co.","Finance","Insurance Brokers/Services",58.0,-2.46,-0.27,-14.19,-12.06,226.11],["AME","AMETEK, Inc.","Producer Manufacturing","Electrical Products",57.8,1.14,0.77,8.11,22.3,251.93],["PCAR","PACCAR Inc","Producer Manufacturing","Trucks/Construction/Farm Machinery",57.7,-0.24,-1.25,-10.54,-0.1,109.68],["AON","Aon Plc Class A","Finance","Insurance Brokers/Services",57.2,-2.36,-2.73,-17.78,-23.26,269.45],["TFC","Truist Financial Corporation","Finance","Regional Banks",56.7,0.37,-1.76,-6.9,-5.69,46.45],["ALL","Allstate Corporation","Finance","Multi-Line Insurance",56.6,-0.3,-1.91,-13.73,8.07,223.74],["AFL","Aflac Incorporated","Finance","Multi-Line Insurance",55.9,0.32,-2.36,-4.13,1.27,111.54],["BKR","Baker Hughes Company Class A","Industrial Services","Contract Drilling",55.6,0.68,-1.56,-11.14,22.48,56.0],["CIEN","Ciena Corporation","Electronic Technology","Telecommunications Equipment",55.5,3.22,7.81,9.54,62.38,391.34],["OKE","ONEOK, Inc.","Industrial Services","Oil & Gas Pipelines",55.4,0.83,-3.11,-7.65,19.63,87.88],["DAL","Delta Air Lines, Inc.","Transportation","Airlines",55.3,-0.05,0.11,8.5,20.39,84.09],["CRH","CRH public limited company","Non-Energy Minerals","Construction Materials",54.5,0.29,-2.38,-10.01,-34.71,81.94],["NUE","Nucor Corporation","Non-Energy Minerals","Steel",54.5,1.87,-2.99,-5.4,45.53,240.39],["GRMN","Garmin Ltd.","Electronic Technology","Telecommunications Equipment",54.2,-0.46,-5.18,2.19,38.05,281.16],["D","Dominion Energy Inc","Utilities","Electric Utilities",53.9,0.91,1.62,-7.53,4.07,61.31],["PSA","Public Storage","Finance","Real Estate Investment Trusts",53.0,-0.07,-0.13,-5.68,9.54,283.81],["CAH","Cardinal Health, Inc.","Distribution Services","Medical Distributors",52.9,-0.78,2.84,-5.27,11.6,228.3],["DVN","Devon Energy Corporation","Energy Minerals","Integrated Oil",52.4,1.04,-0.4,-1.59,29.91,47.65],["FANG","Diamondback Energy, Inc.","Energy Minerals","Oil & Gas Production",51.7,-0.43,-0.94,-8.03,22.25,184.71],["SRE","Sempra","Utilities","Gas Distributors",51.3,0.42,1.17,-6.23,-11.65,78.38],["O","Realty Income Corporation","Finance","Real Estate Investment Trusts",51.2,1.12,-2.38,-12.07,-3.94,54.13],["NDAQ","Nasdaq, Inc.","Finance","Investment Banks/Brokers",50.5,-1.46,-4.52,-7.4,-7.12,90.33],["ROK","Rockwell Automation, Inc.","Producer Manufacturing","Electrical Products",50.5,2.69,4.7,8.14,15.91,454.35],["NKE","NIKE, Inc. Class B","Consumer Non-Durables","Apparel/Footwear",50.2,-3.64,-3.91,-11.0,-47.08,33.87],["EW","Edwards Lifesciences Corporation","Health Technology","Medical Specialties",49.1,-0.05,-1.74,-6.9,-0.36,85.15],["HONA","Honeywell Aerospace Inc","Electronic Technology","Aerospace & Defense",49.0,0.36,-2.75,0.21,-22.68,154.63],["WAB","Westinghouse Air Brake Technologies Corporation","Producer Manufacturing","Trucks/Construction/Farm Machinery",48.6,-0.1,-1.18,2.39,34.6,287.54],["COIN","Coinbase Global, Inc. Class A","Finance","Investment Banks/Brokers",48.3,-3.32,-8.11,4.99,-20.64,183.0],["STT","State Street Corporation","Finance","Investment Banks/Brokers",48.3,0.77,-3.1,-6.19,36.84,175.96],["BDX","Becton, Dickinson and Company","Health Technology","Medical Specialties",48.2,-0.71,-1.35,-5.67,15.79,176.8],["F","Ford Motor Company","Consumer Durables","Motor Vehicles",48.2,-1.39,-4.01,-12.82,-8.19,12.1],["ETR","Entergy Corporation","Utilities","Electric Utilities",48.2,0.51,2.97,-5.79,9.01,100.91],["A","Agilent Technologies, Inc.","Health Technology","Medical Specialties",47.3,0.66,-2.44,12.57,23.15,167.78],["EBAY","eBay Inc.","Retail Trade","Internet Retail",47.3,0.48,-1.64,1.68,22.3,106.4],["VST","Vistra Corp.","Utilities","Electric Utilities",47.0,0.19,0.76,1.6,-14.56,140.02],["P","Everpure, Inc. Class A","Electronic Technology","Computer Peripherals",46.7,4.48,14.05,49.42,104.79,140.14],["HUM","Humana Inc.","Health Services","Managed Health Care",46.6,2.29,-0.34,-1.85,51.68,388.36],["VMRK","Vivmark Residential","Finance","Real Estate Investment Trusts",46.3,-0.63,-2.02,-8.83,-4.06,59.79],["FITB","Fifth Third Bancorp","Finance","Regional Banks",46.1,0.91,-1.2,-4.76,8.58,50.87],["AZO","AutoZone, Inc.","Retail Trade","Specialty Stores",45.6,-0.96,-2.98,-5.88,-17.28,2792.03],["CARR","Carrier Global Corp.","Producer Manufacturing","Industrial Machinery",45.4,-0.18,-0.18,-3.74,3.78,55.12],["PYPL","PayPal Holdings, Inc.","Commercial Services","Miscellaneous Commercial Services",45.2,-0.49,0.4,0.44,-10.01,52.8],["WDAY","Workday, Inc. Class A","Technology Services","Information Technology Services",44.9,-0.33,-2.11,-6.09,-13.5,186.14],["XYZ","Block, Inc. Class A","Commercial Services","Miscellaneous Commercial Services",44.7,0.39,-2.85,-3.42,13.1,74.33],["XEL","Xcel Energy Inc.","Utilities","Electric Utilities",44.6,1.2,2.73,-6.36,-3.28,71.4],["NTAP","NetApp, Inc.","Electronic Technology","Computer Peripherals",44.4,5.22,14.67,20.9,110.19,226.27],["VEEV","Veeva Systems Inc. Class A","Technology Services","Packaged Software",44.3,-3.05,-1.27,-1.78,22.34,273.33],["ADSK","Autodesk, Inc.","Technology Services","Packaged Software",44.3,0.33,0.31,-14.07,-28.38,212.0],["MCHP","Microchip Technology Incorporated","Electronic Technology","Semiconductors",44.2,3.59,8.14,13.8,24.61,81.32],["VTR","Ventas, Inc.","Finance","Real Estate Investment Trusts",44.1,0.33,-3.5,-8.65,8.58,84.01],["LHX","L3Harris Technologies Inc","Electronic Technology","Aerospace & Defense",44.1,-0.76,-0.63,-10.55,-19.52,236.6],["AMP","Ameriprise Financial, Inc.","Finance","Investment Managers",43.4,-0.79,0.93,-9.79,0.19,490.91],["FERG","Ferguson Enterprises Inc.","Distribution Services","Wholesale Distributors",43.2,0.83,1.46,2.32,0.08,223.33],["FLEX","Flex Ltd","Electronic Technology","Electronic Production Equipment",43.1,3.4,1.91,9.2,89.79,116.61],["IQV","IQVIA Holdings Inc","Health Technology","Biotechnology",42.5,-0.96,-6.07,0.08,14.55,258.21],["EXC","Exelon Corporation","Utilities","Electric Utilities",42.0,0.64,1.5,-6.71,-6.5,40.73],["WAT","Waters Corporation","Health Technology","Medical Specialties",41.8,-0.08,-0.82,5.1,12.15,425.21],["KDP","Keurig Dr Pepper Inc.","Consumer Non-Durables","Beverages: Non-Alcoholic",41.3,-1.04,-1.65,-5.51,9.17,30.37],["ILMN","Illumina, Inc.","Health Technology","Medical Specialties",41.2,2.75,0.32,30.88,107.9,273.04],["CMG","Chipotle Mexican Grill, Inc.","Consumer Services","Restaurants",40.9,0.12,1.28,-14.14,-13.13,32.36],["IDXX","IDEXX Laboratories, Inc.","Health Technology","Medical Specialties",40.8,0.12,1.46,-5.18,-23.38,518.39],["LYV","Live Nation Entertainment, Inc.","Consumer Services","Movies/Entertainment",39.8,1.15,-1.07,-4.89,18.49,168.77],["AIG","American International Group, Inc.","Finance","Multi-Line Insurance",39.2,-0.66,0.11,-1.62,-12.08,74.93],["MSCI","MSCI Inc. Class A","Commercial Services","Financial Publishing/Services",39.0,-1.73,-2.92,-4.83,-6.23,535.95],["PRU","Prudential Financial, Inc.","Finance","Life/Health Insurance",38.8,-0.47,-5.51,-4.09,-0.24,112.6],["ADM","Archer-Daniels-Midland Company","Process Industries","Agricultural Commodities/Milling",38.8,1.17,-1.15,-4.96,40.06,80.45],["SYY","Sysco Corporation","Distribution Services","Food Distributors",38.1,-0.36,-0.79,-6.07,6.25,77.49],["ED","Consolidated Edison, Inc.","Utilities","Electric Utilities",38.1,-0.11,0.76,-4.06,3.77,103.39],["TTWO","Take-Two Interactive Software, Inc.","Technology Services","Packaged Software",37.9,-0.44,-0.37,-6.17,-21.33,202.73],["DHI","D.R. Horton, Inc.","Consumer Durables","Homebuilding",37.8,-1.5,-3.96,-4.78,-6.47,135.0],["CBRE","CBRE Group, Inc. Class A","Finance","Real Estate Development",37.5,-0.73,-5.15,-11.37,-19.17,129.58],["ODFL","Old Dominion Freight Line, Inc.","Transportation","Trucking",37.4,1.34,3.43,-3.28,14.41,180.48],["YUM","Yum! Brands, Inc.","Consumer Services","Restaurants",37.1,-0.42,-0.64,-10.44,-10.18,136.12],["UAL","United Airlines Holdings, Inc.","Transportation","Airlines",36.5,0.65,-0.62,5.35,-0.08,112.51],["PAYX","Paychex, Inc.","Technology Services","Data Processing Services",35.2,-1.88,-2.21,-20.85,-11.76,98.94],["ROP","Roper Technologies, Inc.","Technology Services","Packaged Software",35.0,-2.28,-2.21,-16.25,-20.33,354.32],["KR","Kroger Co.","Retail Trade","Food Retail",34.9,-0.76,0.68,1.78,-5.34,59.03],["EME","EMCOR Group, Inc.","Industrial Services","Engineering & Construction",34.7,2.29,4.29,7.02,27.6,786.61],["CCL","Carnival Corporation Ltd.","Consumer Services","Hotels/Resorts/Cruise lines",34.6,2.75,17.3,9.06,-16.06,25.76],["MLM","Martin Marietta Materials, Inc.","Non-Energy Minerals","Construction Materials",34.3,0.65,0.43,-5.0,-22.12,482.27],["HIG","Hartford Insurance Group, Inc.","Finance","Property/Casualty Insurance",34.1,0.25,0.47,-8.54,-8.11,126.05],["PEG","Public Service Enterprise Group Inc","Utilities","Electric Utilities",33.9,0.27,2.27,-7.38,-15.74,68.07],["IRM","Iron Mountain, Inc.","Finance","Real Estate Investment Trusts",33.8,2.03,-0.38,-0.55,36.61,113.39],["AXON","Axon Enterprise Inc","Electronic Technology","Aerospace & Defense",33.6,-2.1,-6.93,-19.99,-27.91,413.35],["EL","Estee Lauder Companies Inc. Class A","Consumer Non-Durables","Household/Personal Care",33.3,1.97,-3.3,-8.03,-12.92,91.97],["STLD","Steel Dynamics, Inc.","Non-Energy Minerals","Steel",33.3,2.57,-1.47,-2.07,35.17,231.99],["TKO","TKO Group Holdings, Inc. Class A","Consumer Services","Movies/Entertainment",33.2,-0.26,-4.52,-4.13,-16.36,175.58],["WEC","WEC Energy Group Inc","Utilities","Electric Utilities",33.1,-0.14,0.58,-4.14,-3.86,101.59],["KVUE","Kenvue, Inc.","Consumer Non-Durables","Household/Personal Care",33.0,-0.12,-2.22,-8.32,-0.41,17.2],["ON","ON Semiconductor Corporation","Electronic Technology","Semiconductors",33.0,6.01,14.3,16.51,53.65,84.89],["BIIB","Biogen Inc.","Health Technology","Pharmaceuticals: Major",32.5,-1.32,-3.68,0.77,25.38,219.88],["DXCM","DexCom, Inc.","Health Technology","Medical Specialties",32.2,-1.01,-2.31,-5.19,28.11,85.36],["HSY","Hershey Company","Consumer Non-Durables","Food: Specialty/Candy",32.2,0.56,-3.79,-9.33,-11.97,160.19],["JBL","Jabil Inc.","Producer Manufacturing","Industrial Machinery",31.9,1.54,-4.54,1.71,31.61,304.41],["ACGL","Arch Capital Group Ltd.","Finance","Multi-Line Insurance",31.9,-0.7,-1.79,-5.78,-2.27,93.6],["EXPE","Expedia Group, Inc.","Consumer Services","Other Consumer Services",31.8,0.89,1.09,-13.59,-6.37,265.0],["RMD","ResMed Inc.","Health Technology","Medical Specialties",31.6,-1.02,-0.99,-6.75,-9.46,218.89],["MTB","M&T Bank Corporation","Finance","Regional Banks",31.6,0.82,0.22,-6.16,9.05,219.14],["VMC","Vulcan Materials Company","Non-Energy Minerals","Construction Materials",31.5,-0.38,0.3,-6.61,-14.74,243.06],["KMB","Kimberly-Clark Corporation","Consumer Non-Durables","Household/Personal Care",31.4,0.02,-2.99,-12.2,-6.75,94.36],["NTRS","Northern Trust Corporation","Finance","Investment Managers",31.4,1.3,-2.22,-6.5,25.32,171.4],["EQT","EQT Corporation","Energy Minerals","Integrated Oil",31.4,0.16,-1.9,-8.96,-5.96,50.17],["CNC","Centene Corporation","Health Services","Managed Health Care",31.1,3.28,1.45,-3.69,52.96,62.99],["HBAN","Huntington Bancshares Incorporated","Finance","Major Banks",31.0,0.92,-0.39,-7.32,-11.8,15.33],["RJF","Raymond James Financial, Inc.","Finance","Investment Managers",30.4,-0.97,-0.63,-9.0,-1.26,158.21],["MTD","Mettler-Toledo International Inc.","Health Technology","Medical Specialties",29.8,0.34,-1.6,9.17,6.24,1486.19],["IR","Ingersoll Rand Inc.","Producer Manufacturing","Industrial Machinery",29.5,1.09,1.45,1.4,-4.71,76.07],["GEHC","GE Healthcare Technologies Inc.","Health Technology","Medical Specialties",29.0,0.48,-2.89,-8.78,-22.15,64.29],["HPQ","HP Inc.","Technology Services","Information Technology Services",29.0,-0.09,1.65,1.55,42.5,32.12],["ZTS","Zoetis, Inc. Class A","Health Technology","Pharmaceuticals: Major",28.8,0.85,-0.44,-10.03,-44.87,69.69],["SMCI","Super Micro Computer, Inc.","Electronic Technology","Computer Processing Hardware",28.7,4.22,4.02,16.04,45.83,43.69],["TDY","Teledyne Technologies Incorporated","Electronic Technology","Aerospace & Defense",28.6,0.73,0.43,0.84,20.31,617.17],["RDDT","Reddit, Inc. Class A","Technology Services","Internet Software/Services",28.4,-1.12,-3.19,2.67,-36.32,147.86],["CCI","Crown Castle Inc.","Finance","Real Estate Investment Trusts",28.3,0.48,-1.76,-12.31,-25.22,66.44],["CBOE","Cboe Global Markets Inc","Finance","Investment Banks/Brokers",28.3,-2.14,2.29,-11.08,8.09,271.26],["EXR","Extra Space Storage Inc.","Finance","Real Estate Investment Trusts",28.2,0.13,0.6,-4.65,2.45,133.25],["AEE","Ameren Corporation","Utilities","Electric Utilities",27.7,0.3,0.89,-5.76,0.2,99.94],["Q","Qnity Electronics, Inc.","Electronic Technology","Electronic Equipment/Instruments",27.5,2.36,7.26,12.78,60.95,131.48],["WSM","Williams-Sonoma, Inc.","Retail Trade","Specialty Stores",27.4,-0.47,1.59,4.91,27.16,232.3],["ECHO","EchoStar Corporation Class A","Communications","Specialty Telecommunications",27.4,6.8,4.17,8.66,-13.28,94.25],["CFG","Citizens Financial Group, Inc.","Finance","Major Banks",27.1,0.99,-1.08,-5.98,10.04,64.33],["PCG","PG&E Corporation","Utilities","Electric Utilities",27.1,1.23,-0.48,-9.14,-23.9,12.32],["WTW","Willis Towers Watson Public Limited Company","Finance","Insurance Brokers/Services",26.8,-1.03,-2.68,-14.52,-11.87,288.61],["ATO","Atmos Energy Corporation","Utilities","Gas Distributors",26.6,0.51,0.68,-6.26,-5.97,157.17],["HAL","Halliburton Company","Industrial Services","Oilfield Services/Equipment",26.5,-0.09,-1.7,-12.74,12.39,31.85],["CTSH","Cognizant Technology Solutions Corporation Class A","Technology Services","Information Technology Services",26.4,-3.89,2.45,-7.58,-29.5,58.51],["KHC","Kraft Heinz Company","Consumer Non-Durables","Food: Major Diversified",26.3,-1.2,-7.04,-14.98,-8.65,22.19],["ARES","Ares Management Corporation Class A","Finance","Investment Managers",26.3,0.84,-2.16,-14.84,-27.74,117.55],["DG","Dollar General Corporation","Retail Trade","Discount Stores",26.2,0.01,-3.03,-9.55,-10.43,118.94],["VRSN","VeriSign, Inc.","Technology Services","Internet Software/Services",26.0,0.49,-1.22,-0.02,18.61,288.32],["AWK","American Water Works Company, Inc.","Utilities","Water Utilities",25.9,1.87,-1.03,-5.05,0.02,130.25],["CPAY","Corpay, Inc.","Commercial Services","Miscellaneous Commercial Services",25.9,1.25,-1.5,-3.22,30.81,394.6],["DTE","DTE Energy Company","Utilities","Electric Utilities",25.9,0.96,2.8,-8.61,-3.78,124.45],["DGX","Quest Diagnostics Incorporated","Health Services","Services to the Health Industry",25.8,0.97,-1.29,-1.97,34.63,233.33],["WST","West Pharmaceutical Services, Inc.","Health Technology","Medical Specialties",25.7,-0.01,-1.89,7.71,32.6,364.98],["FFIV","F5, Inc.","Technology Services","Packaged Software",25.7,2.34,1.68,13.92,77.48,454.04],["WRB","W. R. Berkley Corporation","Finance","Multi-Line Insurance",25.6,0.12,2.71,1.2,-1.13,68.98],["DOV","Dover Corporation","Producer Manufacturing","Industrial Machinery",25.5,0.87,0.5,-0.44,-2.81,189.69],["CPRT","Copart, Inc.","Retail Trade","Specialty Stores",25.2,-0.26,-2.37,-15.92,-30.46,27.22],["FE","FirstEnergy Corp.","Utilities","Electric Utilities",25.1,-0.12,0.49,-6.07,-3.39,43.34],["HUBB","Hubbell Incorporated","Producer Manufacturing","Electrical Products",25.1,1.83,1.91,7.0,6.21,475.52],["LH","Labcorp Holdings Inc.","Health Services","Medical/Nursing Services",25.0,1.28,0.08,-6.28,22.75,308.49],["EXPD","Expeditors International of Washington, Inc.","Transportation","Air Freight/Couriers",25.0,2.52,4.71,2.71,29.05,192.47],["VICI","VICI Properties Inc","Finance","Real Estate Investment Trusts",24.9,-0.35,-2.62,-11.32,-19.57,22.65],["FOXA","Fox Corporation Class A","Consumer Services","Broadcasting",24.9,1.63,-2.08,-5.71,-14.84,62.28],["CINF","Cincinnati Financial Corporation","Finance","Multi-Line Insurance",24.9,-0.12,-0.64,-4.95,-0.84,161.95],["CNP","CenterPoint Energy, Inc.","Utilities","Electric Utilities",24.9,1.56,2.75,-4.23,-1.41,37.79],["PPL","PPL Corporation","Utilities","Electric Utilities",24.7,0.12,2.56,-4.68,-6.29,32.8],["OTIS","Otis Worldwide Corporation","Industrial Services","Engineering & Construction",24.4,-0.67,-3.51,-9.47,-26.57,64.05],["ES","Eversource Energy","Utilities","Electric Utilities",24.3,0.3,0.94,-8.42,-4.85,64.5],["PFG","Principal Financial Group, Inc.","Finance","Investment Managers",24.0,-0.25,-2.18,2.38,26.78,111.96],["XYL","Xylem Inc.","Producer Manufacturing","Industrial Machinery",23.8,0.9,-1.07,-5.1,-25.31,101.79],["FISV","Fiserv, Inc.","Commercial Services","Miscellaneous Commercial Services",23.6,-2.25,-3.57,-14.25,-34.31,44.36],["TPR","Tapestry, Inc.","Retail Trade","Apparel/Footwear Retail",23.6,-0.94,5.9,-3.87,-8.59,118.12],["LVS","Las Vegas Sands Corp.","Consumer Services","Casinos/Gaming",23.5,-1.25,-6.6,-17.19,-44.43,36.23],["TPL","Texas Pacific Land Corporation","Miscellaneous","Investment Trusts/Mutual Funds",23.5,1.11,1.89,-7.31,18.95,340.19],["INCY","Incyte Corporation","Health Technology","Pharmaceuticals: Major",23.4,-1.57,-8.29,-8.8,17.35,115.3],["PPG","PPG Industries, Inc.","Process Industries","Industrial Specialties",23.4,0.46,-1.53,-4.94,2.06,105.15],["SYF","Synchrony Financial","Finance","Finance/Rental/Leasing",23.4,0.36,0.1,-6.95,-14.26,71.77],["ULTA","Ulta Beauty Inc.","Retail Trade","Specialty Stores",23.2,1.11,-1.28,-0.36,-10.3,543.69],["VLTO","Veralto Corporation","Producer Manufacturing","Industrial Machinery",23.1,0.08,-1.43,-2.42,-4.58,94.68],["RF","Regions Financial Corporation","Finance","Major Banks",23.1,0.52,-0.7,-8.17,0.04,27.1],["CASY","Casey's General Stores, Inc.","Retail Trade","Specialty Stores",22.8,-0.28,3.23,-19.11,11.95,617.76],["DRI","Darden Restaurants, Inc.","Consumer Services","Restaurants",22.7,1.48,-2.24,-7.01,8.56,200.33],["CHD","Church & Dwight Co., Inc.","Consumer Non-Durables","Household/Personal Care",22.4,0.21,-1.05,-5.1,12.92,94.31],["TROW","T. Rowe Price Group, Inc.","Finance","Investment Managers",22.3,-1.14,-0.23,-4.27,2.1,104.62],["SW","Smurfit Westrock PLC","Process Industries","Containers/Packaging",22.2,-1.16,-8.59,-6.46,9.53,42.54],["JBHT","J.B. Hunt Transport Services, Inc.","Transportation","Trucking",22.0,3.08,1.89,-8.69,20.45,234.2],["PHM","PulteGroup, Inc.","Consumer Durables","Homebuilding",21.7,-0.53,-2.36,-6.65,-2.3,115.73],["L","Loews Corporation","Finance","Property/Casualty Insurance",21.7,0.93,0.68,-3.12,0.98,106.03],["RL","Ralph Lauren Corporation Class A","Consumer Non-Durables","Apparel/Footwear",21.6,0.2,4.73,5.45,2.36,363.37],["KEY","KeyCorp","Finance","Major Banks",21.4,0.15,-1.23,-5.9,-2.67,20.08],["VRSK","Verisk Analytics, Inc.","Technology Services","Data Processing Services",21.3,-2.67,-2.63,-15.18,-26.16,163.88],["IFF","International Flavors & Fragrances Inc.","Consumer Non-Durables","Food: Specialty/Candy",21.0,-0.84,-4.53,-4.57,22.05,82.42],["DLTR","Dollar Tree, Inc.","Retail Trade","Discount Stores",21.0,-1.98,-1.01,-14.92,-8.59,112.16],["LUV","Southwest Airlines Co.","Transportation","Airlines",20.8,1.51,0.66,9.97,2.31,42.47],["GPN","Global Payments Inc.","Finance","Finance/Rental/Leasing",20.7,-2.38,-9.08,-13.19,1.01,78.38],["EIX","Edison International","Utilities","Electric Utilities",20.7,0.17,1.99,-5.09,-10.73,53.89],["BG","Bunge Global SA","Process Industries","Agricultural Commodities/Milling",20.5,0.1,-2.54,-11.21,19.64,106.72],["PKG","Packaging Corporation of America","Process Industries","Containers/Packaging",20.4,-0.51,-4.53,-0.47,10.97,228.54],["STE","STERIS plc","Health Technology","Medical Specialties",20.3,-0.38,0.21,-9.03,-17.71,208.54],["OMC","Omnicom Group Inc","Commercial Services","Advertising/Marketing Services",20.3,-0.74,-0.47,-13.68,-8.17,74.15],["VTRS","Viatris, Inc.","Health Technology","Pharmaceuticals: Major",20.2,0.8,0.46,5.07,40.8,17.6],["DOW","Dow, Inc.","Process Industries","Chemicals: Specialty",20.2,1.38,-1.03,-7.57,18.77,27.97],["NRG","NRG Energy, Inc.","Utilities","Electric Utilities",20.0,-1.75,-2.97,-13.82,-41.06,95.23],["BRO","Brown & Brown, Inc.","Finance","Insurance Brokers/Services",20.0,-3.01,-0.38,-17.52,-24.9,59.91],["CMS","CMS Energy Corporation","Utilities","Electric Utilities",20.0,0.16,1.63,-5.92,-8.83,63.74],["EXE","Expand Energy Corporation","Energy Minerals","Integrated Oil",19.8,-0.51,-2.13,-14.3,-22.24,85.52],["AMCR","Amcor PLC","Process Industries","Containers/Packaging",19.4,0.12,-1.69,-9.0,0.26,41.86],["STZ","Constellation Brands, Inc. Class A","Consumer Non-Durables","Beverages: Alcoholic",19.3,-0.11,-0.98,-14.37,-18.45,112.87],["LEN","Lennar Corporation Class A","Consumer Durables","Homebuilding",19.2,-2.8,-2.67,-4.43,-22.52,79.81],["CHTR","Charter Communications, Inc. Class A","Consumer Services","Cable/Satellite TV",19.1,-1.87,-5.81,-25.99,-47.82,109.29],["SNA","Snap-on Incorporated","Consumer Durables","Tools & Hardware",19.1,0.32,0.41,-3.47,7.07,368.9],["NI","NiSource Inc","Utilities","Gas Distributors",18.9,-0.18,0.79,-3.33,-5.58,39.43],["LYB","LyondellBasell Industries NV","Process Industries","Chemicals: Specialty",18.9,1.38,-1.33,-9.36,34.42,58.58],["FSLR","First Solar, Inc.","Electronic Technology","Semiconductors",18.8,1.45,0.3,-12.41,-34.32,174.61],["NDSN","Nordson Corporation","Producer Manufacturing","Industrial Machinery",18.6,1.37,2.59,5.31,38.3,333.54],["BBY","Best Buy Co., Inc.","Retail Trade","Electronics/Appliance Stores",18.4,0.31,-1.94,6.17,30.48,87.97],["CHRW","C.H. Robinson Worldwide, Inc.","Transportation","Air Freight/Couriers",18.4,2.99,8.04,6.63,-2.26,157.72],["EVRG","Evergy, Inc.","Utilities","Electric Utilities",18.2,0.48,1.94,-2.69,9.46,79.17],["TSN","Tyson Foods, Inc. Class A","Consumer Non-Durables","Food: Meat/Fish/Dairy",17.9,2.81,1.65,-5.93,-11.41,51.89],["ZBRA","Zebra Technologies Corporation Class A","Electronic Technology","Computer Processing Hardware",17.8,0.11,2.64,8.78,52.58,375.86],["BR","Broadridge Financial Solutions, Inc.","Technology Services","Information Technology Services",17.7,-2.62,-3.19,-12.97,-29.68,156.93],["DD","DuPont de Nemours, Inc.","Process Industries","Chemicals: Major Diversified",17.6,0.6,-0.4,-2.19,7.14,129.98],["GPC","Genuine Parts Company","Distribution Services","Wholesale Distributors",17.5,1.69,-1.59,-6.23,3.35,127.24],["CF","CF Industries Holdings, Inc.","Process Industries","Chemicals: Agricultural",17.4,0.41,-2.39,-13.9,48.44,115.01],["FTV","Fortive Corp.","Electronic Technology","Electronic Equipment/Instruments",17.4,2.92,3.64,0.09,3.87,57.47],["ESS","Essex Property Trust, Inc.","Finance","Real Estate Investment Trusts",17.3,-0.32,-1.24,-4.12,3.72,268.65],["IEX","IDEX Corporation","Producer Manufacturing","Industrial Machinery",17.2,1.37,1.87,4.32,30.87,232.99],["GIS","General Mills, Inc.","Consumer Non-Durables","Food: Major Diversified",17.1,1.07,-7.91,-22.34,-31.13,32.01],["IP","International Paper Company","Process Industries","Pulp & Paper",16.9,-1.69,-9.23,-12.89,-19.1,31.97],["RVTY","Revvity, Inc.","Health Technology","Medical Specialties",16.9,1.66,0.55,20.32,55.9,151.53],["FDXF","FedEx Freight Holding Company, Inc.","Transportation","Trucking",16.9,2.01,-0.81,-11.46,-16.38,112.89],["ZBH","Zimmer Biomet Holdings, Inc.","Health Technology","Medical Specialties",16.8,0.26,-1.27,-11.11,-1.87,88.29],["SBAC","SBA Communications Corp. Class A","Finance","Real Estate Investment Trusts",16.8,0.3,-4.52,-15.81,-17.53,158.49],["FIS","Fidelity National Information Services, Inc.","Technology Services","Packaged Software",16.7,-1.99,-7.49,-20.99,-51.22,32.44],["LNT","Alliant Energy Corporation","Utilities","Electric Utilities",16.7,0.97,1.69,-5.23,-1.05,64.33],["BEN","Franklin Templeton, Inc.","Finance","Investment Managers",16.7,0.95,0.24,-0.82,36.82,32.81],["CDW","CDW Corporation","Technology Services","Information Technology Services",16.7,-1.87,-4.79,-12.3,-2.85,133.29],["EFX","Equifax Inc.","Commercial Services","Financial Publishing/Services",16.4,0.19,-5.79,-24.54,-35.34,140.0],["TSCO","Tractor Supply Company","Retail Trade","Specialty Stores",16.2,-2.02,-1.18,-10.2,-37.78,31.09],["J","Jacobs Solutions Inc.","Technology Services","Data Processing Services",16.2,-1.24,2.33,-5.37,4.07,138.06],["NVR","NVR, Inc.","Consumer Durables","Homebuilding",16.0,-2.16,-3.97,-5.12,-17.75,5993.85],["NWSA","News Corporation Class A","Consumer Services","Publishing: Newspapers",16.0,0.17,1.41,-6.55,9.76,28.69],["AKAM","Akamai Technologies, Inc.","Technology Services","Data Processing Services",15.7,1.86,-13.02,2.75,24.77,108.92],["PTC","PTC Inc.","Technology Services","Packaged Software",15.6,-1.67,5.0,-5.01,-17.39,144.03],["HST","Host Hotels & Resorts, Inc.","Finance","Real Estate Investment Trusts",15.5,0.22,1.44,4.06,27.1,22.56],["INVH","Invitation Homes, Inc.","Finance","Real Estate Investment Trusts",15.4,-1.36,-1.81,-10.88,-5.89,26.04],["APA","APA Corporation","Energy Minerals","Integrated Oil",15.3,0.78,2.06,-0.16,77.71,43.68],["SOLV","Solventum Corporation","Health Services","Medical/Nursing Services",15.0,0.09,-0.77,-3.59,10.87,87.85],["KIM","Kimco Realty Corporation","Finance","Real Estate Investment Trusts",14.9,0.14,-0.31,-8.21,9.94,22.24],["BALL","Ball Corporation","Process Industries","Containers/Packaging",14.9,-0.23,-0.67,-10.93,6.24,56.37],["LDOS","Leidos Holdings, Inc.","Technology Services","Packaged Software",14.8,-3.47,-4.15,-14.83,-34.44,117.74],["ROL","Rollins, Inc.","Commercial Services","Miscellaneous Commercial Services",14.5,-1.34,0.5,-16.45,-49.52,30.16],["FICO","Fair Isaac Corporation","Commercial Services","Financial Publishing/Services",14.3,-0.08,-22.84,-39.17,-60.9,661.25],["EG","Everest Group, Ltd.","Finance","Property/Casualty Insurance",14.1,-0.12,-1.4,-3.14,8.9,368.27],["CRL","Charles River Laboratories International, Inc.","Commercial Services","Miscellaneous Commercial Services",13.9,1.17,-1.02,1.65,45.0,290.19],["DOC","Healthpeak Properties, Inc.","Finance","Real Estate Investment Trusts",13.8,0.26,-3.94,-5.94,21.51,19.49],["SWK","Stanley Black & Decker, Inc.","Consumer Durables","Tools & Hardware",13.8,1.95,1.31,-3.86,22.1,91.34],["MAS","Masco Corporation","Producer Manufacturing","Building Products",13.5,0.12,1.38,-3.62,7.38,68.36],["IVZ","Invesco Ltd.","Finance","Investment Managers",13.5,0.79,-0.62,-4.16,16.0,30.66],["MAA","Mid-America Apartment Communities, Inc.","Finance","Real Estate Investment Trusts",13.4,-0.95,-1.9,-11.11,-16.78,115.27],["TRMB","Trimble Inc.","Technology Services","Packaged Software",13.4,-0.02,0.0,-1.83,-27.06,57.52],["WY","Weyerhaeuser Company","Finance","Real Estate Investment Trusts",13.3,-0.65,-8.25,-21.07,-22.17,18.47],["TXT","Textron Inc.","Electronic Technology","Aerospace & Defense",13.3,0.12,1.48,-3.56,-11.71,77.26],["AIZ","Assurant, Inc.","Finance","Property/Casualty Insurance",13.2,0.41,2.19,-4.99,11.56,267.32],["TYL","Tyler Technologies, Inc.","Technology Services","Data Processing Services",13.2,-2.23,-0.65,-13.43,-28.36,322.81],["GEN","Gen Digital Inc.","Technology Services","Packaged Software",13.2,-1.17,-4.02,-26.8,-19.24,21.99],["REG","Regency Centers Corporation","Finance","Real Estate Investment Trusts",13.1,-0.28,-2.19,-6.33,4.27,71.6],["ALLE","Allegion Public Limited Company","Consumer Durables","Tools & Hardware",13.1,-0.05,1.02,1.02,-3.15,154.21],["CPT","Camden Property Trust","Finance","Real Estate Investment Trusts",13.0,-0.68,-1.41,-9.85,-12.46,95.96],["AVY","Avery Dennison Corporation","Process Industries","Pulp & Paper",12.9,-1.02,0.12,-1.62,-6.51,169.87],["SWKS","Skyworks Solutions, Inc.","Electronic Technology","Semiconductors",12.8,2.25,-3.32,28.08,32.51,85.03],["GNRC","Generac Holdings Inc.","Producer Manufacturing","Electrical Products",12.8,4.28,8.38,19.32,57.12,216.8],["GL","Globe Life Inc.","Finance","Multi-Line Insurance",12.7,-0.09,-1.31,-4.14,18.66,165.68],["HAS","Hasbro, Inc.","Consumer Durables","Recreational Products",12.6,-0.49,2.8,-4.16,9.2,89.54],["SJM","J.M. Smucker Company","Consumer Non-Durables","Food: Specialty/Candy",12.5,1.07,-3.4,-11.1,19.63,117.19],["ALB","Albemarle Corporation","Process Industries","Chemicals: Specialty",12.3,-0.42,-3.86,-21.91,-27.25,104.59],["LII","Lennox International Inc.","Producer Manufacturing","Industrial Machinery",12.3,-1.15,-3.2,-5.34,-27.01,356.3],["GDDY","GoDaddy, Inc. Class A","Technology Services","Data Processing Services",12.3,0.24,-2.1,-3.15,-21.36,97.21],["BF.B","Brown-Forman Corporation Class B","Consumer Non-Durables","Beverages: Alcoholic",12.1,0.73,0.5,-2.97,0.11,26.16],["BAX","Baxter International Inc.","Health Technology","Medical Specialties",12.1,-0.63,0.26,-8.06,21.71,23.49],["MKC","McCormick & Company, Incorporated","Consumer Non-Durables","Food: Specialty/Candy",12.0,1.2,-6.19,-17.8,-34.54,44.67],["IT","Gartner, Inc.","Technology Services","Internet Software/Services",11.7,-4.15,2.81,-2.26,-26.2,184.8],["PNW","Pinnacle West Capital Corp","Utilities","Electric Utilities",11.6,1.36,5.35,-1.07,8.14,95.92],["TECH","Bio-Techne Corporation","Health Technology","Biotechnology",11.4,0.0,-0.26,0.28,23.11,72.4],["DVA","DaVita Inc.","Health Services","Medical/Nursing Services",11.4,1.33,1.89,1.28,57.19,178.69],["HRL","Hormel Foods Corporation","Consumer Non-Durables","Food: Meat/Fish/Dairy",11.1,1.45,2.17,-8.41,-14.92,20.25],["CSGP","CoStar Group, Inc.","Technology Services","Internet Software/Services",11.1,-1.23,-1.26,-14.34,-59.2,27.38],["LULU","lululemon athletica inc.","Consumer Non-Durables","Apparel/Footwear",10.9,-1.46,-6.92,-20.32,-54.85,94.46],["COO","Cooper Companies, Inc.","Health Technology","Medical Specialties",10.8,-0.87,3.14,-17.88,-30.67,56.91],["DECK","Deckers Outdoor Corporation","Consumer Non-Durables","Apparel/Footwear",10.8,-0.57,0.29,-6.34,-24.15,79.12],["PSKY","Paramount Skydance Corporation Class B","Consumer Services","Cable/Satellite TV",10.7,1.71,-6.91,-9.95,-29.1,9.5],["UDR","UDR, Inc.","Finance","Real Estate Investment Trusts",10.7,-1.22,-0.92,-10.11,-9.02,33.27],["AES","AES Corporation","Utilities","Electric Utilities",10.6,-0.07,0.2,1.08,2.76,14.91],["HII","Huntington Ingalls Industries, Inc.","Electronic Technology","Aerospace & Defense",10.6,-2.11,1.34,-8.11,-21.03,268.54],["UHS","Universal Health Services, Inc. Class B","Health Services","Hospital/Nursing Management",10.4,0.37,-0.72,3.28,-19.33,175.72],["ERIE","Erie Indemnity Company Class A","Finance","Property/Casualty Insurance",10.3,-0.46,0.97,-14.01,-22.42,221.09],["ALGN","Align Technology, Inc.","Health Technology","Medical Specialties",10.2,-1.1,-1.26,-7.56,-8.86,143.74],["JKHY","Jack Henry & Associates, Inc.","Technology Services","Packaged Software",10.0,-0.9,-3.54,-14.91,-21.65,142.54],["DPZ","Domino's Pizza, Inc.","Consumer Services","Restaurants",9.8,0.89,1.4,-13.24,-28.58,297.62],["CLX","Clorox Company","Consumer Non-Durables","Household/Personal Care",9.7,-0.3,-2.17,-15.81,-20.46,80.41],["BXP","BXP Inc","Finance","Real Estate Investment Trusts",9.7,0.35,-2.92,-9.95,-10.54,60.45],["HSIC","Henry Schein, Inc.","Distribution Services","Medical Distributors",9.5,-0.06,-0.76,-4.65,12.2,84.88],["FDS","FactSet Research Systems Inc.","Commercial Services","Financial Publishing/Services",9.5,-4.18,-1.43,-11.77,-7.81,266.0],["FRT","Federal Realty Investment Trust","Finance","Real Estate Investment Trusts",9.3,-1.24,-3.37,-9.3,7.39,106.69],["PODD","Insulet Corporation","Health Technology","Medical Specialties",9.1,0.69,-3.01,-11.02,-53.87,131.69],["APTV","Aptiv PLC","Producer Manufacturing","Electrical Products",9.0,-0.98,-1.05,-3.27,-33.1,43.54],["PNR","Pentair plc","Producer Manufacturing","Industrial Machinery",8.5,0.28,-0.21,-12.23,-49.12,53.03],["ARE","Alexandria Real Estate Equities, Inc.","Finance","Real Estate Investment Trusts",8.3,0.72,-5.83,-8.52,-2.91,47.37],["CTVA","Corteva Inc","Process Industries","Agricultural Commodities/Milling",8.0,-5.17,-84.91,-86.5,-82.21,11.92],["WYNN","Wynn Resorts, Limited","Consumer Services","Casinos/Gaming",7.8,-1.84,-6.18,-16.38,-36.81,75.88],["MGM","MGM Resorts International","Consumer Services","Casinos/Gaming",7.7,0.03,-10.33,-25.51,-16.79,30.48],["AOS","A. O. Smith Corporation","Producer Manufacturing","Building Products",7.7,0.14,-1.92,-3.45,-15.37,56.75],["NCLH","Norwegian Cruise Line Holdings Ltd.","Consumer Services","Hotels/Resorts/Cruise lines",7.0,3.42,4.92,-3.13,-32.77,15.14],["MOS","Mosaic Company","Process Industries","Chemicals: Agricultural",6.7,-2.23,-11.1,-14.7,-12.57,21.07]];
+const AS_OF = "נכון לסגירת המסחר 02.10.2026";
+
+const HE = {
+  "Electronic Technology":"טכנולוגיה אלקטרונית","Technology Services":"שירותי טכנולוגיה","Finance":"פיננסים",
+  "Health Technology":"טכנולוגיה רפואית","Retail Trade":"קמעונאות","Consumer Non-Durables":"מוצרי צריכה",
+  "Producer Manufacturing":"ייצור תעשייתי","Energy Minerals":"אנרגיה","Consumer Services":"שירותי צריכה",
+  "Utilities":"תשתיות","Health Services":"שירותי בריאות","Transportation":"תחבורה","Process Industries":"תעשיות כימיה",
+  "Commercial Services":"שירותים עסקיים","Consumer Durables":"מוצרים בני קיימא","Industrial Services":"שירותי תעשייה",
+  "Communications":"תקשורת","Distribution Services":"הפצה","Non-Energy Minerals":"מתכות וכרייה","Miscellaneous":"שונות"
+};
+const TF_LABEL = {5:"יום",6:"שבוע",7:"חודש",8:"מתחילת השנה"};
+const TF_SCALE = {5:3,6:6,7:10,8:30};   // % at which colour saturates
+
+const state = { tf:5, size:"cap", zoom:null, q:"" };
+const $ = id => document.getElementById(id);
+const map = $("map"), tip = $("tip");
+$("asof").textContent = AS_OF;
+
+const fmtPct = v => v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + "%";
+const fmtCap = b => b >= 1000 ? "$" + (b/1000).toFixed(2) + "T" : "$" + b.toFixed(1) + "B";
+
+// Diverging colour: red ← dark slate → green, saturating at ±scale
+const lerp = (a,b,t) => a + (b-a)*t;
+const hex = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16));
+const NEG = hex("#f23645"), MID = hex("#2a3440"), POS = hex("#089981");
+function color(v){
+  if (v == null) return "#2a3440";
+  const s = TF_SCALE[state.tf], t = Math.min(Math.abs(v)/s, 1) ** .8;
+  const end = v < 0 ? NEG : POS;
+  const c = MID.map((m,i) => Math.round(lerp(m, end[i], t)));
+  return `rgb(${c})`;
+}
+
+// Squarified treemap (Bruls et al.). items: [{v,...}], rect: {x,y,w,h}
+function squarify(items, r){
+  const out = []; let rest = items.slice().sort((a,b) => b.v - a.v);
+  let {x,y,w,h} = r;
+  let total = rest.reduce((s,i) => s + i.v, 0);
+  const worst = (row, side, scale) => {
+    const s = row.reduce((a,b) => a + b.v, 0) * scale;
+    let mx = 0, mn = Infinity;
+    for (const i of row){ const v = i.v*scale; mx = Math.max(mx,v); mn = Math.min(mn,v); }
+    return Math.max(side*side*mx/(s*s), (s*s)/(side*side*mn));
+  };
+  while (rest.length){
+    const scale = (w*h) / total, side = Math.min(w,h);
+    let row = [rest[0]], i = 1;
+    while (i < rest.length && worst(row.concat(rest[i]), side, scale) <= worst(row, side, scale)) row.push(rest[i++]);
+    const sum = row.reduce((a,b) => a + b.v, 0), area = sum*scale;
+    if (w >= h){
+      const cw = area / h; let cy = y;
+      for (const it of row){ const ch = it.v*scale/cw; out.push({it, x, y:cy, w:cw, h:ch}); cy += ch; }
+      x += cw; w -= cw;
+    } else {
+      const ch = area / w; let cx = x;
+      for (const it of row){ const cw2 = it.v*scale/ch; out.push({it, x:cx, y, w:cw2, h:ch}); cx += cw2; }
+      y += ch; h -= ch;
+    }
+    rest = rest.slice(i); total -= sum;
+  }
+  return out;
+}
+
+// Sectors: size and cap-weighted change
+function sectors(){
+  const m = new Map();
+  for (const d of DATA){
+    if (!m.has(d[2])) m.set(d[2], {name:d[2], items:[], cap:0});
+    const s = m.get(d[2]); s.items.push(d); s.cap += d[4];
+  }
+  for (const s of m.values()){
+    let wsum = 0, csum = 0;
+    for (const d of s.items) if (d[state.tf] != null){ wsum += d[4]; csum += d[4]*d[state.tf]; }
+    s.chg = wsum ? csum/wsum : null;
+  }
+  return [...m.values()].sort((a,b) => b.cap - a.cap);
+}
+
+function mapHeight(w){
+  if (state.zoom) return Math.max(420, Math.min(760, w * (w < 640 ? 1.25 : .56)));
+  return w < 640 ? w * 2.1 : w < 1000 ? w * .9 : Math.min(820, w * .6);
+}
+
+function render(){
+  const secs = sectors();
+  const W = map.clientWidth, H = Math.round(mapHeight(W));
+  map.style.height = H + "px";
+  map.textContent = "";
+
+  const shown = state.zoom ? secs.filter(s => s.name === state.zoom) : secs;
+  const val = d => state.size === "mono" ? 1 : d[4];
+  const blocks = squarify(shown.map(s => ({v: s.items.reduce((a,d) => a + val(d), 0), s})), {x:0,y:0,w:W,h:H});
+  const frag = document.createDocumentFragment();
+  const q = state.q.trim().toUpperCase();
+
+  for (const b of blocks){
+    const s = b.it.s;
+    const sec = document.createElement("div");
+    sec.className = "sec";
+    Object.assign(sec.style, {left:b.x+"px", top:b.y+"px", width:b.w+"px", height:b.h+"px"});
+    const head = b.h > 34 && b.w > 40 ? 18 : 0;
+    if (head){
+      const h = document.createElement("div");
+      h.className = "sec-h";
+      h.innerHTML = `${esc(s.name)} <span class="${s.chg >= 0 ? "pos" : "neg"}">${fmtPct(s.chg)}</span>`;
+      h.title = HE[s.name] || s.name;
+      h.onclick = () => setZoom(state.zoom ? null : s.name);
+      sec.appendChild(h);
+    }
+    frag.appendChild(sec);
+    const tiles = squarify(s.items.map(d => ({v: val(d), d})), {x:b.x+1, y:b.y+head+1, w:Math.max(b.w-2,0), h:Math.max(b.h-head-2,0)});
+    for (const t of tiles){
+      const d = t.it.d, el = document.createElement("div");
+      el.className = "t" + (q && (d[0].startsWith(q) || d[1].toUpperCase().includes(q)) ? " hit" : "");
+      Object.assign(el.style, {left:t.x+"px", top:t.y+"px", width:t.w+"px", height:t.h+"px", background:color(d[state.tf])});
+      const m = Math.min(t.w, t.h);
+      if (m > 16 && t.w > 22){
+        const fs = Math.max(9, Math.min(34, Math.min(t.w / (d[0].length*.72 + .6), t.h*.36)));
+        el.innerHTML = `<b style="font-size:${fs}px">${d[0]}</b>` + (t.h > fs*2.3 && t.w > 38 ? `<span style="font-size:${Math.max(9,fs*.52)}px">${fmtPct(d[state.tf])}</span>` : "");
+      }
+      el.dataset.i = DATA.indexOf(d);
+      frag.appendChild(el);
+    }
+  }
+  map.appendChild(frag);
+  map.classList.toggle("searching", !!q);
+
+  // chips
+  $("chips").innerHTML = secs.map(s => `<button type="button" class="chip" style="--c:${color(s.chg)}" aria-pressed="${state.zoom === s.name}" data-s="${esc(s.name)}">${HE[s.name] || s.name} <i class="${s.chg >= 0 ? "pos" : "neg"}">${fmtPct(s.chg)}</i></button>`).join("");
+
+  // crumb
+  $("crumb").innerHTML = state.zoom
+    ? `<button type="button" id="back">→ כל השוק</button><span>סקטור: <b>${HE[state.zoom] || state.zoom}</b> · ${shown[0].items.length} מניות · ${fmtCap(shown[0].cap)}</span>`
+    : `<span>${DATA.length} מניות · ${secs.length} סקטורים · שינוי: <b>${TF_LABEL[state.tf]}</b></span>`;
+  const back = $("back"); if (back) back.onclick = () => setZoom(null);
+
+  renderStats(secs);
+  renderLegend();
+}
+
+function renderStats(){
+  let wsum = 0, csum = 0, up = 0, dn = 0;
+  for (const d of DATA){ const v = d[state.tf]; if (v == null) continue; wsum += d[4]; csum += d[4]*v; v > 0 ? up++ : v < 0 && dn++; }
+  const idx = csum / wsum;
+  const best = DATA.filter(d => d[state.tf] != null).reduce((a,b) => b[state.tf] > a[state.tf] ? b : a);
+  const worst = DATA.filter(d => d[state.tf] != null).reduce((a,b) => b[state.tf] < a[state.tf] ? b : a);
+  const cls = v => v >= 0 ? "pos" : "neg";
+  $("stats").innerHTML =
+    `<div class="stat"><small>ממוצע משוקלל · ${TF_LABEL[state.tf]}</small><b class="${cls(idx)}">${fmtPct(idx)}</b></div>` +
+    `<div class="stat"><small>עולות / יורדות</small><b><span class="pos">${up}</span> / <span class="neg">${dn}</span></b></div>` +
+    `<div class="stat"><small>הכי חזקה · ${best[0]}</small><b class="pos">${fmtPct(best[state.tf])}</b></div>` +
+    `<div class="stat"><small>הכי חלשה · ${worst[0]}</small><b class="neg">${fmtPct(worst[state.tf])}</b></div>`;
+}
+
+function renderLegend(){
+  const s = TF_SCALE[state.tf], steps = [-1,-2/3,-1/3,0,1/3,2/3,1].map(k => k*s);
+  $("legend").innerHTML = steps.map(v => `<span style="background:${color(v)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(+v.toFixed(1))}%</span>`).join("");
+}
+
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function setZoom(z){ state.zoom = z; tip.hidden = true; render(); }
+
+function wireSeg(id, key, parse){
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state[key] = parse(b.dataset.k);
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  });
+}
+wireSeg("tf", "tf", Number);
+wireSeg("sz", "size", String);
+$("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  setZoom(state.zoom === b.dataset.s ? null : b.dataset.s);
+});
+$("q").addEventListener("input", e => { state.q = e.target.value; render(); });
+
+// Tooltip
+function showTip(el, x, y){
+  const d = DATA[+el.dataset.i]; if (!d) return;
+  const c = v => `<dd class="${v >= 0 ? "pos" : "neg"}">${fmtPct(v)}</dd>`;
+  tip.innerHTML = `<div class="row1"><span class="tk">${d[0]}</span><span class="${d[state.tf] >= 0 ? "pos" : "neg"}" style="font-family:var(--mono);font-weight:700">${fmtPct(d[state.tf])}</span></div>
+    <div class="nm">${esc(d[1])}</div>
+    <dl><dt>Price</dt><dd>$${d[9]?.toFixed(2) ?? "—"}</dd><dt>Market cap</dt><dd>${fmtCap(d[4])}</dd>
+    <dt>1D</dt>${c(d[5])}<dt>1W</dt>${c(d[6])}<dt>1M</dt>${c(d[7])}<dt>YTD</dt>${c(d[8])}
+    <dt>Industry</dt><dd style="font-family:Heebo,sans-serif">${esc(d[3] || "—")}</dd></dl>`;
+  tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let left = x + 16, top = y + 16;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 16;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 16;
+  tip.style.left = Math.max(8,left) + "px"; tip.style.top = Math.max(8,top) + "px";
+}
+map.addEventListener("pointermove", e => { const t = e.target.closest(".t"); t ? showTip(t, e.clientX, e.clientY) : tip.hidden = true; });
+map.addEventListener("pointerleave", () => tip.hidden = true);
+map.addEventListener("click", e => {
+  const t = e.target.closest(".t"); if (!t) return;
+  if (!state.zoom) setZoom(DATA[+t.dataset.i][2]);
+  else showTip(t, e.clientX, e.clientY);
+});
+
+let rw, lastW = 0; new ResizeObserver(() => { if (map.clientWidth === lastW) return; lastW = map.clientWidth; cancelAnimationFrame(rw); rw = requestAnimationFrame(render); }).observe(map);
+render();
+
+// SSFI: % of S&P real-estate stocks above their 50-day average, last year (TradingView INDEX:SSFI)
+const SSFI = [45.16, 45.16, 41.93, 38.7, 35.48, 25.8, 16.12, 19.35, 29.03, 41.93, 38.7, 41.93, 48.38, 48.38, 58.06, 54.83, 54.83, 51.61, 29.03, 16.12, 16.12, 16.12, 19.35, 22.58, 19.35, 19.35, 25.8, 25.8, 25.8, 22.58, 16.12, 19.35, 19.35, 19.35, 16.12, 16.12, 29.03, 29.03, 38.7, 45.16, 45.16, 35.48, 35.48, 35.48, 25.8, 25.8, 12.9, 19.35, 25.8, 35.48, 32.25, 48.38, 35.48, 45.16, 41.93, 35.48, 41.93, 41.93, 41.93, 41.93, 41.93, 48.38, 45.16, 35.48, 35.48, 54.83, 51.61, 58.06, 58.06, 54.83, 58.06, 67.74, 70.96, 90.32, 64.51, 70.96, 61.29, 67.74, 67.74, 74.19, 48.38, 64.51, 64.51, 54.83, 51.61, 61.29, 64.51, 67.74, 70.96, 87.09, 87.09, 67.74, 80.64, 80.64, 83.87, 77.41, 74.19, 74.19, 77.41, 74.19, 80.64, 70.96, 77.41, 67.74, 77.41, 77.41, 64.51, 64.51, 61.29, 45.16, 32.25, 38.7, 38.7, 38.7, 29.03, 32.25, 12.9, 12.9, 9.67, 16.12, 9.67, 6.45, 6.45, 19.35, 16.12, 29.03, 25.8, 29.03, 45.16, 48.38, 51.61, 54.83, 61.29, 64.51, 64.51, 83.87, 87.09, 67.74, 58.06, 70.96, 67.74, 61.29, 83.87, 77.41, 90.32, 87.09, 74.19, 74.19, 90.32, 83.87, 80.64, 80.64, 80.64, 74.19, 67.74, 58.06, 77.41, 77.41, 87.09, 87.09, 87.09, 83.87, 87.09, 90.32, 74.19, 61.29, 70.96, 70.96, 74.19, 74.19, 67.74, 70.96, 74.19, 74.19, 80.64, 70.96, 74.19, 54.83, 54.83, 64.51, 77.41, 74.19, 70.96, 80.64, 74.19, 64.51, 64.51, 67.74, 67.74, 70.96, 58.06, 61.29, 58.06, 61.29, 58.06, 61.29, 74.19, 70.96, 67.74, 64.51, 58.06, 61.29, 77.41, 74.19, 80.64, 80.64, 58.06, 58.06, 64.51, 54.83, 54.83, 35.48, 38.7, 29.03, 22.58, 29.03, 45.16, 41.93, 25.8, 26.66, 41.37, 37.93, 44.82, 58.62, 55.17, 41.37, 34.48, 24.13, 20.68, 20, 16.66, 26.66, 20, 16.66, 10, 3.33, 16.66, 10, 10, 6.66, 6.66, 6.66, 10, 10, 3.33, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01];
+// SSTW: % of S&P real-estate stocks above their 20-day average, last year (TradingView INDEX:SSTW)
+const SSTW = [41.93, 45.16, 29.03, 32.25, 25.8, 22.58, 12.9, 16.12, 22.58, 38.7, 41.93, 48.38, 48.38, 58.06, 74.19, 70.96, 74.19, 83.87, 35.48, 9.67, 16.12, 12.9, 16.12, 22.58, 19.35, 19.35, 32.25, 32.25, 45.16, 29.03, 12.9, 22.58, 16.12, 22.58, 19.35, 16.12, 51.61, 51.61, 61.29, 70.96, 80.64, 67.74, 61.29, 58.06, 45.16, 25.8, 29.03, 16.12, 25.8, 61.29, 51.61, 61.29, 32.25, 54.83, 45.16, 29.03, 45.16, 45.16, 61.29, 64.51, 64.51, 77.41, 61.29, 51.61, 54.83, 70.96, 48.38, 58.06, 54.83, 48.38, 51.61, 67.74, 67.74, 93.54, 64.51, 70.96, 54.83, 61.29, 61.29, 61.29, 35.48, 54.83, 58.06, 41.93, 38.7, 64.51, 51.61, 61.29, 67.74, 90.32, 83.87, 70.96, 77.41, 83.87, 80.64, 77.41, 64.51, 70.96, 77.41, 77.41, 83.87, 61.29, 74.19, 61.29, 67.74, 67.74, 35.48, 32.25, 22.58, 9.67, 9.67, 9.67, 16.12, 16.12, 16.12, 9.67, 0.01, 3.22, 0.01, 6.45, 3.22, 3.22, 3.22, 19.35, 22.58, 48.38, 54.83, 58.06, 83.87, 90.32, 90.32, 90.32, 93.54, 96.77, 93.54, 96.77, 100, 87.09, 83.87, 90.32, 93.54, 77.41, 90.32, 70.96, 80.64, 77.41, 61.29, 51.61, 87.09, 74.19, 67.74, 67.74, 67.74, 48.38, 45.16, 22.58, 54.83, 51.61, 67.74, 80.64, 80.64, 83.87, 77.41, 64.51, 51.61, 35.48, 48.38, 58.06, 77.41, 77.41, 70.96, 77.41, 87.09, 80.64, 87.09, 61.29, 70.96, 22.58, 29.03, 38.7, 64.51, 70.96, 80.64, 80.64, 80.64, 61.29, 61.29, 61.29, 51.61, 61.29, 41.93, 32.25, 38.7, 51.61, 48.38, 45.16, 74.19, 77.41, 64.51, 41.93, 35.48, 41.93, 64.51, 70.96, 80.64, 90.32, 45.16, 35.48, 45.16, 48.38, 38.7, 32.25, 41.93, 22.58, 19.35, 29.03, 38.7, 32.25, 25.8, 23.33, 31.03, 37.93, 44.82, 58.62, 51.72, 44.82, 31.03, 31.03, 20.68, 23.33, 23.33, 23.33, 13.33, 16.66, 6.66, 0.01, 6.66, 10, 6.66, 6.66, 3.33, 3.33, 16.66, 13.33, 6.66, 6.66, 3.33, 3.33, 3.33, 3.33, 3.33, 3.33];
+const drawBreadth = (id, DATA) => {
+  const svg = $(id);
+  const start = new Date(2025, 9, 2), end = new Date(2026, 9, 2);
+  const draw = () => {
+    const w = svg.clientWidth, h = svg.clientHeight, L = 30, R = 8, T = 8, B = 22;
+    const x = i => L + i * (w - L - R) / (DATA.length - 1), y = v => T + (100 - v) * (h - T - B) / 100;
+    let s = `<defs><linearGradient id="${id}G" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fc3f7" stop-opacity=".35"/><stop offset="1" stop-color="#4fc3f7" stop-opacity="0"/></linearGradient></defs>`;
+    s += `<rect x="${L}" y="${y(100)}" width="${w-L-R}" height="${y(80)-y(100)}" fill="rgba(239,68,68,.08)"/>`;
+    s += `<rect x="${L}" y="${y(20)}" width="${w-L-R}" height="${y(0)-y(20)}" fill="rgba(46,194,126,.08)"/>`;
+    for (const v of [0,20,50,80,100]) s += `<line x1="${L}" x2="${w-R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(160,220,235,${v===20||v===80?.28:.1})" ${v===20||v===80?'stroke-dasharray="4 4"':''}/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+    const span = end - start, mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    for (let d = new Date(2025, 9, 1); d <= end; d.setMonth(d.getMonth() + (w < 520 ? 2 : 1))) {
+      const px = L + (d - start) / span * (w - L - R);
+      s += `<text x="${px}" y="${h-5}" text-anchor="middle">${d.getMonth() ? mon[d.getMonth()] : d.getFullYear()}</text>`;
+    }
+    const pts = DATA.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    s += `<polygon points="${x(0)},${y(0)} ${pts} ${x(DATA.length-1)},${y(0)}" fill="url(#${id}G)"/>`;
+    s += `<polyline points="${pts}" fill="none" stroke="#4fc3f7" stroke-width="1.6" stroke-linejoin="round"/>`;
+    const lx = x(DATA.length-1), ly = y(DATA.at(-1));
+    s += `<circle cx="${lx}" cy="${ly}" r="3.5" fill="#4fc3f7" stroke="#050b12" stroke-width="1.5"/>`;
+    svg.innerHTML = s;
+  };
+  draw(); new ResizeObserver(draw).observe(svg);
+};
+drawBreadth("ssfi", SSFI);
+drawBreadth("sstw", SSTW);
+
+// Fear & Greed gauge (CNN), moved from the fear & greed page
+(() => {
+  const NOW = 31, PREV = [37, 46, 55]; // 1W, 1M, 1Y ago
+  const ZONES = [
+    { to:25,  he:"EXTREME FEAR",  c:"#ef5350" },
+    { to:45,  he:"FEAR",          c:"#ff8a4c" },
+    { to:55,  he:"NEUTRAL",       c:"#9fb0bb" },
+    { to:75,  he:"GREED",         c:"#8fd66b" },
+    { to:100, he:"EXTREME GREED", c:"#26a69a" },
+  ].map((z, i, a) => ({ ...z, from: i ? a[i-1].to : 0 }));
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const svg = $("fg-gauge"), NS = "http://www.w3.org/2000/svg";
+  const cx = 300, cy = 300, R = 280, r = 175;
+  const ang = v => Math.PI * (1 - v/100);
+  const pt = (v, rad) => [cx + rad*Math.cos(ang(v)), cy - rad*Math.sin(ang(v))];
+  const el = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+  const active = ZONES.find(z => NOW < z.to) || ZONES.at(-1);
+
+  el("defs", {}).innerHTML = `<filter id="fgGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <radialGradient id="fgHub"><stop offset="0" stop-color="#16222c"/><stop offset="1" stop-color="#0a1219"/></radialGradient>`;
+
+  ZONES.forEach(z => {
+    const g = .6, a = z.from + (z.from ? g : 0), b = z.to - (z.to < 100 ? g : 0);
+    const [x1,y1] = pt(a,R), [x2,y2] = pt(b,R), [x3,y3] = pt(b,r), [x4,y4] = pt(a,r);
+    const on = z === active;
+    el("path", { d:`M${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 0 0 ${x4} ${y4} Z`,
+      fill: on ? z.c : "rgba(255,255,255,.05)", "fill-opacity": on ? .28 : 1,
+      stroke: on ? z.c : "rgba(160,220,235,.14)", "stroke-width": on ? 2.5 : 1, filter: on ? "url(#fgGlow)" : "none" });
+    const mid = (z.from + z.to)/2, [lx,ly] = pt(mid, (R+r)/2), rot = 90 - mid/100*180;
+    el("text", { class:"gseg-label", x:lx, y:ly, "text-anchor":"middle", "dominant-baseline":"central",
+      transform:`rotate(${-rot} ${lx} ${ly})`, fill: on ? "#fff" : z.c, "fill-opacity": on ? 1 : .75 }).textContent = z.he;
+  });
+
+  for (let v = 0; v <= 100; v += 5) {
+    const major = v % 25 === 0, [x,y] = pt(v, r - 16);
+    el("circle", { cx:x, cy:y, r: major ? 2.6 : 1.6, fill: major ? "#9fb0bb" : "#4b5d69" });
+    if (major) { const [tx,ty] = pt(v, r - 40); el("text", { class:"tick-label", x:tx, y:ty, "text-anchor":"middle", "dominant-baseline":"central" }).textContent = v; }
+  }
+  PREV.forEach(v => { const [x1,y1] = pt(v, R + 4), [x2,y2] = pt(v, R + 18); el("line", { x1, y1, x2, y2, stroke:"#b9c8d1", "stroke-width":2, "stroke-linecap":"round", opacity:.55 }); });
+
+  const needle = el("g", { id:"fg-needle" });
+  el("path", { d:`M${cx-7} ${cy} L${cx} ${cy - (r + 58)} L${cx+7} ${cy} Z`, fill:"#fff" }, needle);
+  el("circle", { cx, cy, r:62, fill:"url(#fgHub)", stroke:"rgba(160,220,235,.18)" });
+  needle.style.transform = "rotate(-90deg)";
+  const setNeedle = () => { needle.style.transform = `rotate(${NOW/100*180 - 90}deg)`; };
+
+  $("fg").style.setProperty("--c", active.c);
+  $("fg-state").textContent = active.he;
+  const num = $("fg-num");
+  if (reduce) { setNeedle(); num.textContent = NOW; return; }
+  // animate when the gauge scrolls into view
+  new IntersectionObserver((es, io) => {
+    if (!es[0].isIntersecting) return; io.disconnect();
+    requestAnimationFrame(() => requestAnimationFrame(setNeedle));
+    const t0 = performance.now();
+    (function count(t){ const p = Math.min(1,(t-t0)/1500); num.textContent = Math.round(NOW*(1-Math.pow(1-p,3))); if (p<1) requestAnimationFrame(count); })(t0);
+  }, { threshold:.3 }).observe(svg);
+})();
+
+
+// AAII Investor Sentiment Survey, newest first (moved from the fear & greed page)
+(() => {
+  const AAII = [
+    { week:"9/30/2026", bull:34.6, neut:18.9, bear:46.5 },
+    { week:"9/23/2026", bull:32.7, neut:19.2, bear:48.1 },
+    { week:"9/16/2026", bull:28.8, neut:17.9, bear:53.3 },
+    { week:"9/9/2026",  bull:38.0, neut:22.7, bear:39.3 },
+  ];
+  const weeks = $("aaii-weeks"), segs = [];
+  AAII.forEach((w, i) => {
+    const total = w.bull + w.neut + w.bear, row = document.createElement("div");
+    row.className = "wk" + (i === 0 ? " now" : "");
+    row.innerHTML = `<div class="wk-date">${w.week}</div>
+      <div class="wk-bar">
+        <div class="sg" style="--c:var(--bull)" data-w="${w.bull/total*100}"><span>${w.bull.toFixed(1)}%</span></div>
+        <div class="sg" style="--c:var(--neut)" data-w="${w.neut/total*100}"><span>${w.neut.toFixed(1)}%</span></div>
+        <div class="sg" style="--c:var(--bear)" data-w="${w.bear/total*100}"><span>${w.bear.toFixed(1)}%</span></div>
+      </div>`;
+    weeks.appendChild(row);
+    segs.push(...row.querySelectorAll(".sg"));
+  });
+  const grow = () => segs.forEach(s => s.style.width = s.dataset.w + "%");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return grow();
+  new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { io.disconnect(); requestAnimationFrame(() => requestAnimationFrame(grow)); } }, { threshold:.2 }).observe(weeks);
+})();
+
+// Star field, same as the rest of Velora
+(() => {
+  const c = $("sky"), ctx = c.getContext("2d");
+  const draw = () => {
+    const dpr = Math.min(devicePixelRatio || 1, 2), w = c.clientWidth, h = c.clientHeight;
+    c.width = w*dpr; c.height = h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+    let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 160; i++){
+      const x = rnd()*w, y = rnd()*h, r = rnd()*1.3 + .3;
+      ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fillStyle = `rgba(190,225,240,${.08 + rnd()*.25})`; ctx.fill();
+    }
+  };
+  draw(); addEventListener("resize", draw);
+})();
+</script>
+
+</body></html>

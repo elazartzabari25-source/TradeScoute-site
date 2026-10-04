@@ -1,0 +1,402 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>אזור אישי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  :root{
+    --bg:#e6e8eb; --ink:#12161d; --muted:#5d6572;
+    --gold:#ffd166; --blue:#2f6bff;
+    --card-h:min(60vh,520px); --frame:#ffd166;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;direction:rtl;min-height:100vh;display:flex;flex-direction:column}
+  [hidden]{display:none!important}
+  .wrap{padding-inline:16px;max-width:1272px;margin:0 auto;width:100%}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:24px 22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:64px;height:64px;border-radius:16px;background:#000;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(14,17,23,.18)}
+  .logo img{width:100%;height:100%;display:block;object-fit:cover}
+  .brand h1{margin:0;font-family:"Unbounded","Heebo",system-ui,sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1;direction:ltr}
+  .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .date{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:var(--muted);direction:ltr}
+
+  .night{position:relative;flex:1;background:#050b12;color:#e8eef3;border-radius:34px 34px 0 0;overflow:clip;isolation:isolate}
+  .night canvas{position:sticky;top:0;display:block;width:100%;height:100vh;margin-bottom:-100vh;z-index:-1;pointer-events:none}
+  .night .wrap{padding-block:34px 0}
+  section.row{padding-block:10px 18px;--c:var(--gold)}
+  section.row + section.row{border-top:1px solid rgba(160,220,235,.08);padding-top:26px}
+  .row-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .row-head h2{margin:0;font-size:clamp(20px,2.6vw,28px);font-weight:700;display:flex;align-items:center;gap:10px}
+  .row-head h2 .sw{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+  .count{font-size:13px;color:#8fa3b0}
+  .count b{font-family:"JetBrains Mono",monospace;color:#fff;font-weight:500}
+
+  /* Empty state */
+  .none{margin:16px 0 4px;padding:34px 20px;border:1px dashed rgba(255,209,102,.28);border-radius:22px;text-align:center;color:#b9c8d1}
+  .none svg{width:54px;height:54px;display:block;margin:0 auto 12px;opacity:.9}
+  .none h3{margin:0 0 6px;color:#fff;font-size:18px;font-weight:700}
+  .none p{margin:0 auto;max-width:44ch;font-size:14px;line-height:1.6}
+  .none .tap{display:inline-flex;gap:3px;vertical-align:middle;margin-inline:4px}
+  .none .tap i{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+
+  /* Favorites wheel, same motion as the home page */
+  .stage{position:relative;height:calc(var(--card-h) + 40px);margin-top:6px;overflow:hidden;perspective:1400px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+  .stage:active{cursor:grabbing}
+  .card{position:absolute;top:50%;left:50%;height:var(--card-h);aspect-ratio:1170/2346;margin:0;
+    transition:transform .7s cubic-bezier(.2,.8,.2,1),filter .7s,opacity .7s;will-change:transform}
+  .card img{width:100%;height:100%;display:block;border-radius:calc(var(--card-h)*.045);pointer-events:none;-webkit-user-drag:none;
+    box-shadow:0 0 0 1.5px color-mix(in srgb,var(--cc) 80%,white),0 30px 60px rgba(0,0,0,.55)}
+  .card.active img{box-shadow:0 0 0 2px color-mix(in srgb,var(--cc) 80%,white),0 0 40px color-mix(in srgb,var(--cc) 40%,transparent),0 30px 60px rgba(0,0,0,.6)}
+  .card.active{cursor:zoom-in}
+  .cat{display:flex;align-items:center;justify-content:center;gap:7px;margin:10px 0 0;font-size:13px;color:#b9c8d1}
+  .cat i{width:8px;height:8px;border-radius:50%;background:var(--cc);box-shadow:0 0 8px var(--cc)}
+
+  .ctrl{display:flex;align-items:center;justify-content:center;gap:18px;padding-block:4px 0}
+  .ctrl button{width:42px;height:42px;border-radius:50%;border:1px solid rgba(160,220,235,.18);background:rgba(255,255,255,.04);color:#e8eef3;font-size:18px;cursor:pointer;display:grid;place-items:center;transition:background .2s}
+  .ctrl button:hover{background:rgba(255,255,255,.12)}
+  .ctrl button:focus-visible,.dots button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .dots{display:flex;gap:8px;direction:ltr;flex-wrap:wrap;justify-content:center;max-width:50vw}
+  .dots button{width:8px;height:8px;border-radius:99px;border:0;padding:0;background:#3a4a56;cursor:pointer;transition:width .3s,background .3s}
+  .dots button[aria-current="true"]{width:26px;background:var(--gold)}
+  .ticker{font-family:"JetBrains Mono",monospace;font-size:14px;min-width:110px;text-align:center;direction:ltr}
+
+  /* Saved symbols */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding:0;list-style:none}
+  .chips li{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;padding-inline:14px 8px;border-radius:16px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(160,220,235,.14)}
+  .chips .sym{font:500 15px "JetBrains Mono",monospace;direction:ltr;color:#fff}
+  .chips .nm{font-size:13px;color:#8fa3b0;direction:ltr;max-width:22ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chips .dots2{display:flex;gap:4px}
+  .chips .dots2 i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+  .chips .off{font-size:12px;color:#6f8593}
+  .chips button.go{border:0;background:none;color:inherit;font:inherit;padding:0;cursor:pointer;display:flex;align-items:center;gap:10px}
+  .chips button.go:disabled{cursor:default}
+  .chips button.go:focus-visible,.chips button.x:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+  .chips button.x{flex:none;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.07);color:#b9c8d1;font-size:15px;line-height:1;cursor:pointer}
+  .chips button.x:hover{background:rgba(239,83,80,.2);color:#fff}
+
+  .hint{padding-block:18px 0;color:#7f94a1;font-size:13px;text-align:center}
+  .copy{margin-top:40px;padding-block:22px 28px;border-top:1px solid rgba(160,220,235,.1);display:flex;justify-content:center;align-items:center;gap:8px;direction:ltr;color:#b9c8d1;font-size:14px;letter-spacing:.04em}
+  .copy span{font-family:"Unbounded","Heebo",sans-serif;font-weight:600;color:#fff}
+
+  /* Full-screen view */
+  .zoom{position:fixed;inset:0;z-index:1000;background:rgba(3,7,12,0);transition:background .5s,backdrop-filter .5s;cursor:zoom-out}
+  .zoom.on{background:rgba(3,7,12,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .zcard{position:fixed;perspective:2000px;transition:left .6s cubic-bezier(.2,.8,.2,1),top .6s cubic-bezier(.2,.8,.2,1),width .6s cubic-bezier(.2,.8,.2,1),height .6s cubic-bezier(.2,.8,.2,1)}
+  .zflip{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .8s cubic-bezier(.3,1.15,.45,1) .05s}
+  .zoom.flipped .zflip{transform:rotateY(180deg)}
+  .zflip img{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:4.5% / 2.25%;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;pointer-events:none;
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--frame) 80%,white),0 0 50px color-mix(in srgb,var(--frame) 40%,transparent),0 30px 70px rgba(0,0,0,.7)}
+  .zflip .zb{transform:rotateY(180deg);background:#fff}
+  .zhint{position:fixed;inset-inline:0;bottom:calc(12px + env(safe-area-inset-bottom,0px));margin:0;text-align:center;color:#b9c8d1;font-size:13px;opacity:0;transition:opacity .4s;pointer-events:none}
+  .zoom.flipped .zhint{opacity:1}
+
+  @media (max-width:640px){ :root{--card-h:min(58vh,440px)} .chips .nm{display:none} }
+  @media (prefers-reduced-motion:reduce){ .card,.zcard,.zflip,.zoom{transition:none} }
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><img src="tradescout-logo.png" alt=""></div>
+      <div>
+        <h1>TradeScout</h1>
+        <p>אזור אישי · המניות שבחרתם לעקוב אחריהן</p>
+      </div>
+    </div>
+    <div class="date" id="date"></div>
+  </header>
+</div>
+
+<div class="night">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <main>
+      <section class="row" id="favRow">
+        <div class="row-head">
+          <h2><span class="sw"></span>Favorite</h2>
+          <span class="count" id="favCount"></span>
+        </div>
+        <div class="none" id="empty" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9z" fill="rgba(255,209,102,.14)" stroke="#ffd166" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          <h3>עדיין אין מועדפים</h3>
+          <p>לחיצה כפולה<span class="tap" aria-hidden="true"><i></i><i></i></span>על כרטיס בעמוד הבית או בפיד שומרת את המניה כאן. כל כרטיס של המניה, בכל אינדיקטור, יופיע בגלגלת.</p>
+        </div>
+        <div id="wheel"></div>
+      </section>
+
+      <section class="row" id="savedRow" hidden>
+        <div class="row-head">
+          <h2><span class="sw"></span>מניות שמורות</h2>
+          <span class="count" id="savedCount"></span>
+        </div>
+        <ul class="chips" id="chips"></ul>
+      </section>
+    </main>
+    <p class="hint">לחצו על הכרטיס האמצעי למסך מלא · לחיצה כפולה על כרטיס מסירה אותו מהמועדפים</p>
+    <footer class="copy">© <span>Eldar &amp; Elazar</span></footer>
+  </div>
+</div>
+
+<div class="zoom" id="zoom" hidden role="dialog" aria-modal="true" aria-label="כרטיס מניה במסך מלא">
+  <div class="zcard"><div class="zflip"><img class="zf" alt="" draggable="false"><img class="zb" alt="" draggable="false"></div></div>
+  <p class="zhint">לחצו שוב כדי לחזור לגרף</p>
+</div>
+
+<script src="fav.js"></script>
+<script>
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let ROWS = [], NAMES = {}, zoomOpen = false;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// Today's cards come from the home page, so the daily card update needs no second copy here.
+async function loadCards(){
+  const src = await fetch("home.html", { cache:"no-store" }).then(r => r.text());
+  const grab = name => {
+    const m = src.match(new RegExp("const " + name + " = (\\[[\\s\\S]*?\\]|\\{[\\s\\S]*?\\});\\s*\\n"));
+    return m ? Function('"use strict";return (' + m[1] + ")")() : null;
+  };
+  ROWS = grab("ROWS") || [];
+  NAMES = grab("NAMES") || {};
+  const d = src.match(/<div class="date">([^<]*)<\/div>/);
+  document.getElementById("date").textContent = d ? d[1] : "";
+}
+
+// ---------- favorites wheel ----------
+const wheel = document.getElementById("wheel");
+let wheelAC = null, timer = null;
+
+function build(){
+  if (wheelAC) wheelAC.abort();
+  clearInterval(timer);
+  wheelAC = new AbortController();
+  const sig = { signal: wheelAC.signal };
+  wheel.innerHTML = "";
+
+  const favs = Favs.list();
+  // every card of a saved stock, in the order the stocks were saved, then by indicator
+  const items = favs.flatMap(sym => ROWS.flatMap(r => r.files
+    .filter(([f]) => f.split("_")[0] === sym)
+    .map(([f]) => ({ f, sym, row:r }))));
+
+  document.getElementById("empty").hidden = items.length > 0;
+  document.getElementById("favCount").innerHTML = items.length
+    ? `<b>${items.length}</b> כרטיסים · <b>${new Set(items.map(i => i.sym)).size}</b> מניות` : "";
+  drawChips(favs);
+  if (!items.length) return;
+
+  const n = items.length;
+  let slots = [];
+  while (slots.length < 5) slots = slots.concat(items.map((it,i) => ({ ...it, i })));
+  const m = slots.length;
+
+  wheel.innerHTML = `
+    <div class="stage" tabindex="0" aria-roledescription="carousel" aria-label="המניות המועדפות"></div>
+    <div class="ctrl">
+      <button class="next" aria-label="הבא">›</button>
+      <div class="dots"></div>
+      <span class="ticker"></span>
+      <button class="prev" aria-label="הקודם">‹</button>
+    </div>
+    <p class="cat"><i></i><span></span></p>`;
+  const stage = wheel.querySelector(".stage"), dots = wheel.querySelector(".dots"), ticker = wheel.querySelector(".ticker"), cat = wheel.querySelector(".cat");
+  const cards = slots.map(s => {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.style.setProperty("--cc", s.row.color);
+    el.innerHTML = `<img src="img/${s.f}_card.webp" alt="${s.sym}" draggable="false">`;
+    stage.appendChild(el);
+    return el;
+  });
+  const dotBtns = items.map((it,i) => {
+    const b = document.createElement("button");
+    b.setAttribute("aria-label", it.sym);
+    b.onclick = () => { go(nearest(i)); restart(); };
+    dots.appendChild(b);
+    return b;
+  });
+
+  let active = 0;
+  const wrapOff = o => { o = ((o % m) + m) % m; return o > m/2 ? o - m : o; };
+  function nearest(i){
+    let best = active, bd = 1e9;
+    slots.forEach((s,k) => { if (s.i === i) { const d = Math.abs(wrapOff(k - active)); if (d < bd) { bd = d; best = k; } } });
+    return best;
+  }
+  function render(){
+    const w = cards[0].offsetWidth, narrow = stage.offsetWidth < 640;
+    const gap = w * (narrow ? .55 : .78);
+    cards.forEach((el,k) => {
+      const o = wrapOff(k - active), a = Math.abs(o);
+      el.style.transform = `translate(-50%,-50%) translateX(${-o * gap}px) scale(${1 - Math.min(a,3) * .12}) rotateY(${Math.max(-1, Math.min(1, o)) * -8}deg)`;
+      el.style.zIndex = 100 - Math.round(a*10);
+      el.style.opacity = a > 2.5 ? 0 : 1;
+      el.style.filter = a < .5 ? "none" : `brightness(${1 - Math.min(a,2)*.22})`;
+      el.classList.toggle("active", a < .5);
+    });
+    const cur = slots[active];
+    dotBtns.forEach((b,i) => b.setAttribute("aria-current", i === cur.i));
+    ticker.textContent = cur.sym + " · " + cur.f.split("_")[2];
+    cat.style.setProperty("--cc", cur.row.color);
+    cat.lastChild.textContent = cur.row.title;
+  }
+  const go = k => { active = ((k % m) + m) % m; render(); };
+  wheel.show = sym => { const i = items.findIndex(it => it.sym === sym); if (i >= 0) { go(nearest(i)); restart(); } };
+
+  wheel.querySelector(".next").onclick = () => { go(active+1); restart(); };
+  wheel.querySelector(".prev").onclick = () => { go(active-1); restart(); };
+  stage.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") { go(active+1); restart(); }
+    if (e.key === "ArrowRight") { go(active-1); restart(); }
+  });
+
+  // one click: bring forward / open full screen; double click: remove from favorites
+  let lastTap = { k:-1, t:0 }, zoomTimer = null, moved = false;
+  cards.forEach((el,k) => el.addEventListener("click", () => {
+    if (moved) return;
+    const now = performance.now();
+    if (lastTap.k === k && now - lastTap.t < 320) {
+      lastTap.k = -1; clearTimeout(zoomTimer);
+      Favs.toggle(slots[k].sym, el);
+      return;
+    }
+    lastTap = { k, t:now };
+    if (k === active) zoomTimer = setTimeout(() => openZoom(el, slots[k]), 300);
+    else { go(k); restart(); }
+  }));
+
+  let startX = null;
+  stage.addEventListener("pointerdown", e => { startX = e.clientX; moved = false; });
+  addEventListener("pointerup", e => {
+    if (startX === null) return;
+    const dx = e.clientX - startX; startX = null;
+    if (Math.abs(dx) > 40) { moved = true; go(active + (dx < 0 ? -1 : 1)); restart(); setTimeout(() => moved = false, 0); }
+  }, sig);
+  let wheelAcc = 0, wheelLock = false;
+  stage.addEventListener("wheel", e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if (wheelLock) return;
+    wheelAcc += e.deltaX;
+    if (Math.abs(wheelAcc) > 50) {
+      go(active + (wheelAcc > 0 ? -1 : 1));
+      wheelAcc = 0; wheelLock = true; restart();
+      setTimeout(() => wheelLock = false, 450);
+    }
+  }, { passive:false });
+
+  let hover = false;
+  function restart(){ clearInterval(timer); if (!reduce && n > 1 && !sig.signal.aborted) timer = setInterval(() => { if (!hover && !zoomOpen && !document.hidden) go(active+1); }, 4200); }
+  stage.addEventListener("mouseenter", () => hover = true);
+  stage.addEventListener("mouseleave", () => hover = false);
+  addEventListener("resize", render, sig);
+  cards[0].querySelector("img").addEventListener("load", render, { once:true });
+  render(); restart();
+}
+
+// ---------- saved symbols ----------
+function drawChips(favs){
+  document.getElementById("savedRow").hidden = !favs.length;
+  document.getElementById("savedCount").innerHTML = favs.length ? `<b>${favs.length}</b> מניות` : "";
+  document.getElementById("chips").innerHTML = favs.map(sym => {
+    const rows = ROWS.filter(r => r.files.some(([f]) => f.split("_")[0] === sym));
+    const nm = (NAMES[sym] || [])[0] || "";
+    return `<li>
+      <button class="go" data-sym="${esc(sym)}" ${rows.length ? "" : "disabled"} aria-label="הצג את ${esc(sym)} בגלגלת">
+        <span class="sym">${esc(sym)}</span>${nm ? `<span class="nm">${esc(nm)}</span>` : ""}
+        ${rows.length ? `<span class="dots2">${rows.map(r => `<i style="--c:${r.color}" title="${esc(r.title)}"></i>`).join("")}</span>`
+                      : `<span class="off">אין כרטיס היום</span>`}
+      </button>
+      <button class="x" data-sym="${esc(sym)}" aria-label="הסר את ${esc(sym)} מהמועדפים">×</button>
+    </li>`;
+  }).join("");
+}
+document.getElementById("chips").addEventListener("click", e => {
+  const x = e.target.closest("button.x"), g = e.target.closest("button.go");
+  if (x) Favs.remove(x.dataset.sym);
+  else if (g && wheel.show) { wheel.show(g.dataset.sym); document.getElementById("favRow").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); }
+});
+
+// ---------- full-screen view ----------
+const zoom = document.getElementById("zoom"), zcard = zoom.querySelector(".zcard");
+let zSource = null, zBusy = false;
+function place(r){ Object.assign(zcard.style, { left:r.left+"px", top:r.top+"px", width:r.width+"px", height:r.height+"px" }); }
+function fullRect(){
+  const pad = 16;
+  let h = innerHeight - pad*2 - 24, w = h / 2;
+  if (w > innerWidth - pad*2) { w = innerWidth - pad*2; h = w * 2; }
+  return { left:(innerWidth-w)/2, top:(innerHeight-24-h)/2, width:w, height:h };
+}
+function openZoom(el, s){
+  if (zBusy || zoomOpen) return;
+  zoom.style.setProperty("--frame", s.row.color);
+  zoom.querySelector(".zf").src = `img/${s.f}_card.webp`; zoom.querySelector(".zf").alt = "גרף " + s.sym;
+  zoom.querySelector(".zb").src = `img/${s.f}_info.webp`; zoom.querySelector(".zb").alt = "ניתוח טקסט של " + s.sym;
+  zSource = el; zoomOpen = true; zBusy = true;
+  zcard.style.transition = "none";
+  place(el.getBoundingClientRect());
+  zoom.hidden = false;
+  el.style.visibility = "hidden";
+  zcard.offsetWidth;
+  zcard.style.transition = "";
+  requestAnimationFrame(() => {
+    zoom.classList.add("on", "flipped");
+    place(fullRect());
+    setTimeout(() => zBusy = false, reduce ? 0 : 650);
+  });
+}
+function closeZoom(){
+  if (zBusy || !zoomOpen) return;
+  zBusy = true;
+  zoom.classList.remove("on", "flipped");
+  place(zSource.getBoundingClientRect());
+  setTimeout(() => {
+    zoom.hidden = true; zSource.style.visibility = "";
+    zoomOpen = false; zBusy = false;
+  }, reduce ? 0 : 820);
+}
+zoom.addEventListener("click", closeZoom);
+addEventListener("keydown", e => { if (e.key === "Escape") closeZoom(); });
+
+// ---------- start ----------
+loadCards().catch(() => {}).then(() => {
+  build();
+  // favorites changed on another page: redraw, unless a card is open full screen
+  let pending = false;
+  Favs.onChange(() => { if (zoomOpen) pending = true; else build(); });
+  zoom.addEventListener("transitionend", () => { if (!zoomOpen && pending) { pending = false; build(); } });
+});
+
+// Background: drifting dust, same as the home page
+(() => {
+  const cv = document.getElementById("sky"), ctx = cv.getContext("2d");
+  let W, H, parts = [];
+  function size(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    parts = Array.from({ length:Math.round(W*H/3200) }, () => ({ x:Math.random()*W, y:Math.random()*H, z:Math.random(), tw:Math.random()*6.3 }));
+  }
+  function frame(){
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,"#0d1118"); g.addColorStop(.55,"#070b12"); g.addColorStop(1,"#03070c");
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    const rg = ctx.createRadialGradient(W/2,H*.3,0,W/2,H*.3,Math.max(W,H)*.6);
+    rg.addColorStop(0,"rgba(255,209,102,.10)"); rg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = rg; ctx.fillRect(0,0,W,H);
+    for (const p of parts){
+      p.y += reduce ? 0 : .1 + p.z*.25; p.tw += .03;
+      const y = p.y % H, r = .4 + p.z*1.6, al = (.2 + p.z*.55) * (.6 + .4*Math.sin(p.tw));
+      ctx.fillStyle = `rgba(255,236,190,${al})`;
+      ctx.beginPath(); ctx.arc(p.x, y, r, 0, 7); ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  size(); addEventListener("resize", size); frame();
+})();
+</script>
+</body></html>

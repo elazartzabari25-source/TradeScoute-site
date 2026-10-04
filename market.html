@@ -1,0 +1,228 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ניתוחים היסטוריים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  :root{
+    --bg:#e6e8eb; --ink:#12161d; --muted:#5d6572;
+    --panel:#0e1117; --teal:#26a69a; --blue:#2f6bff; --pink:#ff6ec7;
+    --night-ink:#e8eef3; --night-muted:#8fa3b0; --night-line:rgba(160,220,235,.1);
+    --amber:#ffa24c; --sky:#4cb8ff; --green:#2ec27e; --violet:#9b8cff;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink)}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;direction:rtl;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{padding-inline:16px;max-width:1272px;margin:0 auto;width:100%}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:24px 22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:64px;height:64px;border-radius:16px;background:#000;overflow:hidden;flex:none;box-shadow:0 6px 18px rgba(14,17,23,.18)}
+  .logo img{width:100%;height:100%;display:block;object-fit:cover}
+  .brand h1{margin:0;font-family:"Unbounded","Heebo",system-ui,sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1;direction:ltr}
+  .brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .date{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;color:var(--muted);direction:ltr}
+
+  .night{position:relative;flex:1;background:#050b12;color:var(--night-ink);border-radius:34px 34px 0 0;overflow:clip;isolation:isolate}
+  .night canvas#sky{position:sticky;top:0;display:block;width:100%;height:100vh;margin-bottom:-100vh;z-index:-1;pointer-events:none}
+  .night .wrap{padding-block:34px 0}
+
+  .row-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .row-head h2{margin:0;font-size:clamp(20px,2.6vw,28px);font-weight:700;text-wrap:balance;display:flex;align-items:center;gap:10px}
+  .row-head h2 .sw{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+  .count{font-size:13px;color:var(--night-muted)}
+  .count b{font-family:"JetBrains Mono",monospace;color:#fff;font-weight:500;direction:ltr;unicode-bidi:isolate}
+  section.row{padding-block:10px 30px}
+  section.row + section.row{border-top:1px solid var(--night-line);padding-top:28px}
+  .lede{margin:10px 0 0;color:#b9c8d1;font-size:15px;line-height:1.65;max-width:62ch}
+
+  .chart{margin-top:18px}
+  .chart svg{display:block;width:100%;height:auto;overflow:visible;direction:ltr}
+  .scroller{overflow-x:auto;padding-bottom:6px}
+  .scroller > svg{min-width:660px}
+
+  .legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;direction:ltr;margin-top:16px;font-size:13.5px;color:#b9c8d1}
+  .legend i{display:inline-flex;align-items:center;gap:7px;font-style:normal}
+  .legend i::before{content:"";width:13px;height:13px;border-radius:4px;background:var(--c)}
+
+  .takeaway{margin-top:18px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.035);
+    box-shadow:inset 0 0 0 1px var(--night-line);border-inline-start:3px solid var(--c);
+    color:#d6e2e9;font-size:14.5px;line-height:1.6}
+  .takeaway b{color:#fff;font-weight:700}
+  .takeaway .n{font-family:"JetBrains Mono",monospace;direction:ltr;unicode-bidi:isolate;color:var(--c)}
+
+  .src{margin-top:16px;text-align:center;font-size:13px;color:var(--night-muted)}
+  .copy{margin-top:34px;padding-block:22px 28px;border-top:1px solid var(--night-line);display:flex;justify-content:center;align-items:center;gap:8px;direction:ltr;color:#b9c8d1;font-size:14px;letter-spacing:.04em}
+  .copy span{font-family:"Unbounded","Heebo",sans-serif;font-weight:600;color:#fff}
+
+  .ax{font-family:"JetBrains Mono",monospace;font-size:12px;fill:#6f8593}
+  .axm{font-family:"Heebo",sans-serif;font-size:12.5px;fill:#8fa3b0}
+  .val{font-family:"JetBrains Mono",monospace;font-size:12.5px;fill:#e8eef3}
+  .grid{stroke:rgba(160,220,235,.12);stroke-width:1}
+  .zero{stroke:rgba(200,225,235,.5);stroke-width:1.4}
+
+  @media (max-width:560px){ .lede{font-size:14px} .takeaway{font-size:13.5px} }
+  @media (prefers-reduced-motion:reduce){ .anim{animation:none!important;transition:none!important} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><img src="tradescout-logo.png" alt=""></div>
+      <div>
+        <h1>TradeScout</h1>
+        <p>ניתוחים היסטוריים · שלוש עובדות שכדאי לזכור</p>
+      </div>
+    </div>
+    <div class="date">22.09.2026 · Market Analysis</div>
+  </header>
+</div>
+
+<div class="night">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <main>
+
+      <section class="row" style="--c:var(--sky)">
+        <div class="row-head">
+          <h2><span class="sw"></span>תנודתיות היא דמי הכניסה</h2>
+          <span class="count">מספר אירועים בשנה · <b>1950–2022</b></span>
+        </div>
+        <p class="lede">ירידות אינן תקלה במערכת, הן המערכת. זו התדירות הממוצעת של כל סוג ירידה ב‑S&P 500 לאורך שבעה עשורים.</p>
+        <div class="chart" id="c3"></div>
+        <div class="takeaway">תיקון של <span class="n">10%</span> קורה בערך <b>פעם בשנה</b>, שוק דובי של <span class="n">20%</span> בערך <b>פעם ב‑2.7 שנים</b>. מי שמתכנן לזה מראש לא נבהל כשזה מגיע.</div>
+      </section>
+
+      <section class="row" style="--c:var(--green)">
+        <div class="row-head">
+          <h2><span class="sw"></span>השנה הממוצעת בשוק</h2>
+          <span class="count">S&P 500 · ממוצע <b>2005–2024</b></span>
+        </div>
+        <p class="lede">מסלול השנה הממוצעת בעשרים השנים האחרונות: חולשה באמצע מרץ, ואחריה התאוששות שנמשכת עד סוף השנה.</p>
+        <div class="chart scroller" id="c4"></div>
+        <div class="takeaway">התחתית הממוצעת נופלת <b>באמצע מרץ</b>, והשנה נסגרת בממוצע ב‑<span class="n">+9.72%</span>. זו עונתיות, לא הבטחה — אבל היא מסבירה למה מכירה בפאניקה באביב יקרה.</div>
+      </section>
+
+      <section class="row" style="--c:var(--violet)">
+        <div class="row-head">
+          <h2><span class="sw"></span>תשואה ממוצעת לפי חודש</h2>
+          <span class="count">S&P 500 · <b>1950–2025</b></span>
+        </div>
+        <p class="lede">אותו חודש נראה אחרת בכל חלון זמן. ההשוואה בין הממוצע ההיסטורי, העשור האחרון ושנות בחירות אמצע הקדנציה מראה כמה קלוש הכלל העונתי כשבודקים אותו מקרוב.</p>
+        <div class="chart scroller" id="c5"></div>
+        <div class="legend">
+          <i style="--c:var(--amber)">מאז 1950</i><i style="--c:var(--sky)">20 שנה אחרונות</i>
+          <i style="--c:var(--green)">10 שנים אחרונות</i><i style="--c:var(--violet)">שנת מידטרם</i>
+        </div>
+        <div class="takeaway"><b>ספטמבר</b> הוא החודש החלש היחיד בכל ארבעת החלונות. <b>נובמבר ויולי</b> הם החזקים — אבל הפער בין החלונות גדול מהממוצע עצמו, ולכן עונתיות היא רקע, לא אסטרטגיה.</div>
+      </section>
+
+    </main>
+    <p class="src">מקורות: S&P Dow Jones Indices · Carson Investment Research</p>
+    <footer class="copy">© <span>Eldar &amp; Elazar</span></footer>
+  </div>
+</div>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+const svg = (host, w, h, label) => {
+  const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img", "aria-label": label });
+  document.getElementById(host).appendChild(s); return s;
+};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ── 3 · Frequency of drawdowns ──────────────────────────────────────── */
+{
+  const D = [["3% dip", "ירידה של 3%", 7.3], ["5% mild correction", "תיקון קל 5%", 3.4],
+    ["10% correction", "תיקון 10%", 1.1], ["15% severe correction", "תיקון חד 15%", 0.7],
+    ["20% bear market", "שוק דובי 20%", 0.4]];
+  const W = 1000, H = 400, L = 46, Rp = 20, T = 40, BOT = H - 62;
+  const s = svg("c3", W, H, "כמה פעמים בשנה בממוצע יורד השוק בכל שיעור");
+  const max = 8, y = v => BOT - v / max * (BOT - T);
+  for (let t = 0; t <= 8; t += 2) {
+    s.appendChild(el("line", { x1: L, x2: W - Rp, y1: y(t), y2: y(t), class: "grid" }));
+    const lb = el("text", { x: L - 10, y: y(t) + 4, class: "ax", "text-anchor": "end" }); lb.textContent = t; s.appendChild(lb);
+  }
+  const bw = (W - L - Rp) / D.length;
+  D.forEach(([en, he, v], i) => {
+    const cx = L + i * bw + bw / 2, w = Math.min(120, bw - 46);
+    s.appendChild(el("rect", { x: cx - w / 2, y: y(v), width: w, height: BOT - y(v), rx: 7, fill: css("--sky"), "fill-opacity": ".92" }));
+    const n = el("text", { x: cx, y: y(v) - 11, class: "val", "text-anchor": "middle", "font-size": "18" }); n.textContent = v.toFixed(1); s.appendChild(n);
+    const a = el("text", { x: cx, y: BOT + 24, class: "axm", "text-anchor": "middle", "font-size": "14", fill: "#cdd9e0" }); a.textContent = he; s.appendChild(a);
+    const b = el("text", { x: cx, y: BOT + 43, class: "ax", "text-anchor": "middle" }); b.textContent = en; s.appendChild(b);
+  });
+  s.appendChild(el("line", { x1: L, x2: W - Rp, y1: BOT, y2: BOT, class: "zero" }));
+}
+
+/* ── 4 · The average year ────────────────────────────────────────────── */
+{
+  const P = [[0,0],[.5,.45],[1,.35],[1.5,.1],[2,.3],[2.2,1.85],[2.45,.55],[2.65,.1],[3,-.1],[3.3,.9],[3.6,2],[4,2.45],
+    [4.3,3.3],[4.7,3.5],[5,3.35],[5.3,3.1],[5.6,4.4],[6,5.9],[6.3,5.6],[6.6,5.9],[7,5.5],[7.3,6.6],[7.6,5.6],
+    [8,5.4],[8.3,6.2],[8.6,5.7],[9,6.2],[9.3,7.4],[9.6,8.6],[10,9],[10.4,8.6],[10.7,9.3],[11,9],[11.5,9.4],[12,9.72]];
+  const MON = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+  const W = 1000, H = 420, L = 54, Rp = 78, T = 26, BOT = H - 48;
+  const s = svg("c4", W, H, "מסלול השנה הממוצעת של S&P 500 בעשרים השנים האחרונות");
+  const x = t => L + t / 12 * (W - L - Rp);
+  const y = v => BOT - (v + 2) / 14 * (BOT - T);
+  for (let t = -2; t <= 12; t += 2) {
+    s.appendChild(el("line", { x1: L, x2: W - Rp, y1: y(t), y2: y(t), class: t === 0 ? "zero" : "grid" }));
+    const lb = el("text", { x: L - 10, y: y(t) + 4, class: "ax", "text-anchor": "end" }); lb.textContent = t.toFixed(1) + "%"; s.appendChild(lb);
+  }
+  let d = `M ${x(P[0][0])} ${y(P[0][1])}`;
+  P.slice(1).forEach(p => d += ` L ${x(p[0])} ${y(p[1])}`);
+  s.appendChild(el("path", { d, fill: "none", stroke: css("--sky"), "stroke-width": 2.6, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  s.appendChild(el("circle", { cx: x(12), cy: y(9.72), r: 4.5, fill: "#fff" }));
+  const e = el("text", { x: x(12) + 10, y: y(9.72) + 5, class: "val", "font-size": "16" }); e.textContent = "9.72%"; s.appendChild(e);
+  MON.forEach((m, i) => { const t = el("text", { x: x(i + .5), y: BOT + 24, class: "axm", "text-anchor": "middle" }); t.textContent = m; s.appendChild(t); });
+  s.appendChild(el("line", { x1: L, x2: W - Rp, y1: BOT, y2: BOT, class: "grid" }));
+}
+
+/* ── 5 · Average monthly returns, four windows ───────────────────────── */
+{
+  const MON = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+  const SER = [
+    { c: "--amber",  v: [1, -.05, 1.05, 1.45, .35, .2, 1.3, .05, -.6, .95, 1.8, 1.4] },
+    { c: "--sky",    v: [.25, -.1, 1.2, 1.9, .5, .15, 2.4, .2, -.5, 1.1, 2.05, .2] },
+    { c: "--green",  v: [1.4, -.6, .2, 1.15, 1.45, 1.85, 3.45, .95, -1.4, .85, 4.1, .05] },
+    { c: "--violet", v: [-1, .3, 1.25, -.35, -.7, -1.85, 1.35, -.5, -.75, 3.05, 2.75, .85] },
+  ];
+  const W = 1000, H = 400, L = 50, Rp = 16, T = 24, BOT = H - 44;
+  const s = svg("c5", W, H, "תשואה חודשית ממוצעת של S&P 500 בארבעה חלונות זמן");
+  const y = v => BOT - (v + 4) / 10 * (BOT - T);
+  for (let t = -4; t <= 6; t += 2) {
+    s.appendChild(el("line", { x1: L, x2: W - Rp, y1: y(t), y2: y(t), class: t === 0 ? "zero" : "grid" }));
+    const lb = el("text", { x: L - 10, y: y(t) + 4, class: "ax", "text-anchor": "end" }); lb.textContent = t + "%"; s.appendChild(lb);
+  }
+  const gw = (W - L - Rp) / 12, bw = (gw - 14) / 4;
+  MON.forEach((m, i) => {
+    const gx = L + i * gw + 7;
+    SER.forEach((se, j) => {
+      const v = se.v[i], top = v >= 0 ? y(v) : y(0);
+      s.appendChild(el("rect", { x: gx + j * bw, y: top, width: bw - 2.5, height: Math.abs(y(v) - y(0)), rx: 2.5, fill: css(se.c), "fill-opacity": ".95" }));
+    });
+    const t = el("text", { x: L + i * gw + gw / 2, y: BOT + 22, class: "axm", "text-anchor": "middle" }); t.textContent = m; s.appendChild(t);
+  });
+  s.appendChild(el("line", { x1: L, x2: W - Rp, y1: y(0), y2: y(0), class: "zero" }));
+}
+
+/* ── ambient starfield, matching the Velora night sections ───────────── */
+(() => {
+  const c = document.getElementById("sky"), ctx = c.getContext("2d");
+  const draw = () => {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = c.clientWidth, h = c.clientHeight;
+    c.width = w * dpr; c.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 160; i++) {
+      const x = rnd() * w, y = rnd() * h, r = rnd() * 1.3 + .3;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832);
+      ctx.fillStyle = `rgba(190,225,240,${.08 + rnd() * .25})`; ctx.fill();
+    }
+  };
+  draw(); addEventListener("resize", draw);
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,382 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>TradeScout Shorts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    --ink:#e9f1f6; --dim:#8fa3b0; --ground:#03070c; --panel:#0b1119;
+    --line:rgba(160,220,235,.14); --glass:rgba(255,255,255,.07);
+    --c1:#2f6bff; --c2:#26a69a; --c3:#ff6ec7;
+    --c:var(--c1);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--ground);color:var(--ink);overscroll-behavior:none;overscroll-behavior-x:none}
+  body{font-family:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;direction:rtl;
+    display:flex;flex-direction:column;overflow:hidden}
+
+  /* ---------- top bar ---------- */
+  .top{position:relative;z-index:30;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:10px 16px calc(10px);background:linear-gradient(#03070c,rgba(3,7,12,.55) 70%,transparent)}
+  .mark{display:flex;align-items:center;gap:9px;min-width:0}
+  .mark img{width:30px;height:30px;flex:0 0 auto;border-radius:8px;background:#000;object-fit:cover;display:block}
+  .mark b{font-family:"Unbounded","Heebo",sans-serif;font-weight:800;font-size:17px;letter-spacing:-.01em;direction:ltr}
+  .stamp{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;color:var(--dim);direction:ltr;white-space:nowrap}
+
+  /* ---------- category rail ---------- */
+  .tabs{position:relative;z-index:30;flex:0 0 auto;display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;
+    scrollbar-width:none;background:linear-gradient(rgba(3,7,12,.55),transparent)}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--glass);color:var(--dim);
+    font:500 13px/1 "Heebo",sans-serif;padding:9px 13px;border-radius:99px;cursor:pointer;display:flex;align-items:center;gap:7px;
+    transition:color .25s,border-color .25s,background .25s}
+  .tabs button .sw{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .tabs button[aria-current="true"]{color:#fff;border-color:color-mix(in srgb,var(--tc) 70%,transparent);
+    background:color-mix(in srgb,var(--tc) 22%,transparent)}
+  .tabs button[aria-current="true"] .sw{background:var(--tc)}
+  .tabs button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
+
+  /* ---------- feed ---------- */
+  .feed{flex:1 1 auto;min-height:0;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .feed::-webkit-scrollbar{display:none}
+  .slide{position:relative;height:100%;scroll-snap-align:center;scroll-snap-stop:always;
+    display:grid;place-items:center;padding:6px 16px 36px;isolation:isolate}
+  .glow{position:absolute;inset:6% 12%;border-radius:50%;z-index:-1;filter:blur(70px);opacity:.42;
+    background:radial-gradient(circle at 50% 45%,var(--c),transparent 70%);transition:opacity .6s}
+
+  .card{position:relative;height:100%;aspect-ratio:1/2;max-width:100%;perspective:1600px;user-select:none;-webkit-user-select:none;
+    transform:scale(.94);opacity:.5;transition:transform .55s cubic-bezier(.2,.8,.2,1),opacity .45s;touch-action:pan-y}
+  .slide.live .card{transform:scale(1);opacity:1}
+  .flip{position:absolute;inset:0;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+    transition:transform .9s cubic-bezier(.25,1.25,.4,1);will-change:transform}
+  .flip.drag{transition:none}
+  .face{position:absolute;inset:0;border-radius:26px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    box-shadow:0 0 0 1.5px color-mix(in srgb,var(--c) 60%,#ffffff40),0 26px 60px rgba(0,0,0,.65);transition:box-shadow .55s}
+  .slide.live .face{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 75%,white),0 0 46px color-mix(in srgb,var(--c) 35%,transparent),0 26px 60px rgba(0,0,0,.7)}
+  .face.back{transform:rotateY(180deg);background:#fff}
+  .face img{width:100%;height:100%;display:block;object-fit:cover;-webkit-user-drag:none;user-select:none;pointer-events:none;
+    transition:filter .6s}
+  .card.locked .front img{filter:brightness(.3) saturate(.45) blur(3px)}
+  /* door shading: darkens a face as it turns edge-on */
+  .face::after{content:"";position:absolute;inset:0;pointer-events:none;background:#000;opacity:var(--shade,0)}
+
+  /* which side is showing */
+  .sides{position:absolute;top:12px;left:12px;z-index:6;display:flex;gap:4px;padding:4px;border-radius:99px;
+    background:rgba(8,14,20,.55);backdrop-filter:blur(6px);direction:rtl;pointer-events:none;opacity:0;transition:opacity .4s}
+  .slide.live .sides{opacity:1}
+  .card.locked .sides{opacity:0}
+  .sides span{font-size:11px;line-height:1;padding:5px 8px;border-radius:99px;color:#9fb1bd;transition:background .3s,color .3s}
+  .card:not(.flipped) .sides .g,.card.flipped .sides .t{background:var(--c);color:#fff}
+
+  /* ---------- card actions (outside the flip, so they stay put on both sides) ---------- */
+  .acts{position:absolute;top:10px;right:10px;z-index:6;display:flex;gap:6px;opacity:0;transition:opacity .4s}
+  .slide.live .acts{opacity:1}
+  .card.locked .acts{opacity:0;pointer-events:none}
+  .turn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(8,14,20,.6);
+    backdrop-filter:blur(6px);color:var(--dim);font-size:17px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;
+    transition:color .25s,transform .25s,border-color .25s}
+  .turn{color:#dbe6ec}
+  .turn:focus-visible{outline:2px solid var(--c);outline-offset:3px}
+
+  /* ---------- lock ---------- */
+  .lock{position:absolute;inset:0;z-index:5;border:0;padding:0;background:none;cursor:pointer;
+    display:grid;place-items:center;gap:0;transition:opacity .45s}
+  .lock .body{width:42%;filter:drop-shadow(0 14px 18px rgba(0,0,0,.55));
+    transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+  .lock svg{width:100%;height:auto;display:block;overflow:visible}
+  .lock .shackle{transition:transform .35s ease}
+  .lock .say{position:absolute;left:50%;top:calc(50% + 24%);transform:translateX(-50%);
+    font-size:13px;color:#cdd9e0;letter-spacing:.02em;white-space:nowrap}
+  .lock:hover .body{transform:scale(1.06)}
+  .lock:focus-visible{outline:2px solid var(--c);outline-offset:-10px;border-radius:26px}
+  .lock{border-radius:26px}
+  .lock.opening .shackle{transform:translateY(-14px)}
+  .lock.gone{opacity:0;pointer-events:none}
+  .lock.gone .body{transform:scale(.7) translateY(-12px)}
+
+  /* ---------- progress + hint ---------- */
+  .pips{position:fixed;left:8px;top:50%;transform:translateY(-50%);z-index:25;display:flex;flex-direction:column;gap:5px;
+    pointer-events:none}
+  .pips i{width:3px;height:12px;border-radius:99px;background:#2b3a46;transition:background .3s,height .3s}
+  .pips i.on{background:var(--c);height:22px}
+  .hint{position:fixed;inset-inline:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:26;text-align:center;
+    font-size:12px;color:#7f94a1;pointer-events:none;transition:opacity .5s}
+  .hint.hide{opacity:0}
+
+  .end{height:100%;scroll-snap-align:center;display:grid;place-items:center;text-align:center;padding:0 24px;gap:6px}
+  .end h2{margin:0;font-family:"Unbounded","Heebo",sans-serif;font-size:22px;font-weight:600}
+  .end p{margin:0;color:var(--dim);font-size:13px}
+  .end .sig{margin-top:10px;direction:ltr;color:#b9c8d1;font-size:13px;letter-spacing:.05em}
+  .end .sig span{font-family:"Unbounded","Heebo",sans-serif;font-weight:600;color:#fff}
+
+  @media (prefers-reduced-motion:reduce){
+    .feed{scroll-behavior:auto}
+    .card,.acts,.lock,.lock .body,.flip{transition:none}
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="bullG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ff0d6"/><stop offset="1" stop-color="#1f9e8c"/></linearGradient>
+  <linearGradient id="lkS" x1="0" x2="1"><stop offset="0" stop-color="#8d9196"/><stop offset=".25" stop-color="#f4f5f6"/><stop offset=".5" stop-color="#9ea2a7"/><stop offset=".78" stop-color="#e3e5e7"/><stop offset="1" stop-color="#7c8085"/></linearGradient>
+  <linearGradient id="lkB" x1="0" x2="1"><stop offset="0" stop-color="#8a8e93"/><stop offset=".08" stop-color="#c9ccd0"/><stop offset=".45" stop-color="#b3b7bb"/><stop offset=".75" stop-color="#d2d5d8"/><stop offset=".93" stop-color="#a7abb0"/><stop offset="1" stop-color="#6f7378"/></linearGradient>
+  <linearGradient id="lkT" y1="0" y2="1" x1="0" x2="0"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".1" stop-color="#fff" stop-opacity="0"/><stop offset=".9" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>
+  <pattern id="lkBr" width="200" height="3" patternUnits="userSpaceOnUse"><rect width="200" height="1" fill="#fff" opacity=".10"/><rect y="2" width="140" height=".6" fill="#000" opacity=".08"/></pattern>
+</defs></svg>
+
+<div class="top">
+  <div class="mark">
+    <img src="../tradescout-logo.png" alt="" aria-hidden="true">
+    <b>TradeScout</b>
+  </div>
+  <div class="stamp" id="stamp">03.10.2026 · 1D · 1/269</div>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="אינדיקטורים"></nav>
+<div class="pips" id="pips" aria-hidden="true"></div>
+<main class="feed" id="feed" tabindex="0" aria-label="פיד כרטיסים"></main>
+<p class="hint" id="hint">גללו למעלה למניה הבאה · החליקו ימינה להפוך לכרטיס הטקסט · הקשה כפולה שומרת במועדפים</p>
+
+<script src="../fav.js"></script>
+<script>
+const DATE = "03.10.2026";
+const CATS = [
+  { key:"support", label:"תמיכה־התנגדות", color:"#2f6bff", kind:"קו תמיכה",
+    files:[["HEI_support_302.28",5.0],["CG_support_39.16",5.2],["DPZ_support_297.56",5.5],["NN_support_13.94",5.5],["AMR_support_171.31",6.2],["MKC.V_support_45.76",6.3],["AMPH_support_25.28",7.4],["AIR_support_101.24",8.1],["AGI_support_32.30",8.2],["PBH_support_44.79",8.5],["SYRE_support_92.48",8.5],["CGAU_support_21.40",9.0],["TXN_support_289.09",13.7],["SAFT_support_103.21",null]] },
+  { key:"breakout", label:"מניות פורצות התנגדות", color:"#ffb020", kind:"מניות פורצות התנגדות",
+    files:[["HEI_breakout_299.18",5.0],["MCHP_breakout_79.98",5.0],["RRC_breakout_37.85",5.1],["ARHS_breakout_10.17",5.7],["FSM_breakout_11.20",6.4],["COP_breakout_126.62",6.7],["LYFT_breakout_15.41",7.2],["NOVT_breakout_149.12",8.1],["AGI_breakout_32.43",8.2],["WGS_breakout_72.39",8.2],["UI_breakout_614.28",8.6],["ETN_breakout_431.03",9.6],["ESTC_breakout_92.10",10.1],["XERS_breakout_9.01",11.0],["EGO_breakout_37.72",14.6],["CNMD_breakout_45.51",15.8],["SAFT_breakout_103.75",null]] },
+  { key:"trendline", label:"קווי מגמה", color:"#26a69a", kind:"קו מגמה",
+    files:[["HEI_trendline_302.30",5.0],["INNV_trendline_8.81",5.0],["RRC_trendline_38.02",5.1],["SB_trendline_8.66",5.4],["NN_trendline_13.91",5.5],["HLNE_trendline_85.43",5.7],["CHRN_trendline_19.09",5.9],["SON_trendline_48.48",6.1],["FRNM_trendline_16.12",6.2],["NEU_trendline_922.70",6.2],["ATEC_trendline_9.91",6.6],["COP_trendline_124.46",6.7],["RLJ_trendline_11.14",7.1],["LYFT_trendline_15.38",7.2],["UNIT_trendline_7.98",7.6],["LGND_trendline_298.41",7.8],["TNDM_trendline_16.47",7.8],["AIR_trendline_100.52",8.1],["PBH_trendline_45.10",8.5],["USAR_trendline_13.34",9.3],["IMVT_trendline_33.12",9.8],["EAT_trendline_200.64",12.0],["RUM_trendline_7.57",13.6],["ANF_trendline_133.88",14.0],["CNMD_trendline_46.24",15.8],["SLS_trendline_11.73",17.4],["RHI_trendline_36.04",25.6],["SAFT_trendline_103.50",null]] },
+  { key:"ma150", label:"ממוצע 150", color:"#ff6ec7", kind:"ממוצע 150",
+    files:[["MCHP_ma150_80.74",5.0],["ALKS_ma150_41.67",5.7],["GAP_ma150_22.25",6.8],["BNY_ma150_142.55",8.9],["IMVT_ma150_33.54",9.8]] },
+  { key:"ma200", label:"ממוצע 200", color:"#9b8cff", kind:"ממוצע 200",
+    files:[["LYFT_ma200_15.41",7.2],["AIP_ma200_24.59",11.6]] },
+  { key:"cuphandle", label:"Cup & Handle", color:"#00c2ff", kind:"Cup & Handle",
+    files:[["PI_cuphandle_186.66",13.2],["NVDA_cuphandle_229.98",15.5],["ACN_cuphandle_197.63",39.3]] },
+  { key:"gapup", label:"גאפ עליון", color:"#7ee07a", kind:"גאפ עליון",
+    files:[["FRO_gap_52.88",1.0],["CAMT_gap_166.00",1.7],["NVT_gap_171.95",2.1],["FTI_gap_69.53",2.5],["ATI_gap_197.00",2.9],["AYA_gap_27.68",2.9],["FER_gap_54.62",3.0],["OVV_gap_61.61",3.2],["ADEA_gap_26.52",3.3],["NOV_gap_19.21",3.4],["CRGY_gap_13.69",3.5],["CSTM_gap_25.12",3.6],["GSBD_gap_9.28",3.9],["MSDL_gap_13.89",4.1],["LQDA_gap_29.18",4.3],["RBLX_gap_44.59",4.3],["UPST_gap_23.68",4.4],["WLK_gap_65.59",4.4],["AA_gap_43.49",4.8],["ESLT_gap_719.00",4.9],["NOC_gap_488.46",5.0],["THRM_gap_32.26",5.2],["STX_gap_852.29",5.3],["LEU_gap_146.00",5.4],["MRVI_gap_8.18",5.4],["AAOI_gap_118.90",5.5],["DCH_gap_5.76",5.5],["CRWV_gap_92.80",5.6],["PM_gap_196.66",5.7],["OMC_gap_77.46",5.8],["RSI_gap_20.87",5.8],["TSN_gap_54.24",5.8],["CVSA_gap_130.88",6.0],["HUBB_gap_494.56",6.0],["OTF_gap_10.03",6.1],["VMC_gap_254.54",6.1],["ROL_gap_31.58",7.0],["AES_gap_14.94",13.3],["MDB_gap_370.43",14.3],["FICO_gap_685.00",25.8]] },
+  { key:"ihs", label:"Inverse Head & Shoulders", color:"#ff8a3d", kind:"Inverse Head & Shoulders",
+    files:[["FTNT_invhs_179.73",11.4],["GCT_invhs_53.47",13.8],["CMRE_invhs_15.41",14.3],["NVDA_invhs_229.72",16.1],["BHE_invhs_86.43",16.3],["GPRE_invhs_15.13",18.4],["ECHO_invhs_93.12",19.1],["QLYS_invhs_189.69",19.7],["OLLI_invhs_86.94",20.0],["LFUS_invhs_451.70",20.8],["APH_invhs_86.48",20.9],["CLS_invhs_381.13",23.2],["ACM_invhs_59.61",25.3],["CVLT_invhs_148.98",25.5],["HAFN_invhs_10.18",31.3],["RXRX_invhs_4.10",31.4]] },
+  { key:"reddays", label:"\u200E5+\u200E ימים אדומים", color:"#ef5350", kind:"\u200E5+\u200E ימים אדומים",
+    files:[["CCJ_reddays_8",null],["EFC_reddays_8",null],["FMC_reddays_8",null],["HROW_reddays_8",null],["WY_reddays_8",null],["XRAY_reddays_8",null],["ANAB_reddays_6",null],["CAI_reddays_6",null],["ICE_reddays_6",null],["IIPR_reddays_6",null],["KHC_reddays_6",null],["TTE_reddays_6",null],["AAP_reddays_5",null],["AGNC_reddays_5",null],["ALNY_reddays_5",null],["AZN_reddays_5",null],["BAP_reddays_5",null],["BXMT_reddays_5",null],["CCS_reddays_5",null],["CNM_reddays_5",null],["DHC_reddays_5",null],["DLX_reddays_5",null],["FHI_reddays_5",null],["GPN_reddays_5",null],["IP_reddays_5",null],["KKR_reddays_5",null],["LBTYK_reddays_5",null],["LOW_reddays_5",null],["MC_reddays_5",null],["MMM_reddays_5",null],["NLY_reddays_5",null],["NVR_reddays_5",null],["OPK_reddays_5",null],["PJT_reddays_5",null],["PSEC_reddays_5",null],["RYTM_reddays_5",null],["SAIC_reddays_5",null],["SARO_reddays_5",null],["SBRA_reddays_5",null],["SPB_reddays_5",null],["SW_reddays_5",null],["VTOL_reddays_5",null],["WD_reddays_5",null],["WFG_reddays_5",null]] },
+  { key:"ma20far", label:"מניות רחוקות מממוצע 20", color:"#f5d90a", kind:"מניות רחוקות מממוצע 20",
+    files:[["ARR_ma20_14.85",9.3],["CAG_ma20_14.61",9.3],["SPOT_ma20_516.73",9.3],["FAF_ma20_68.46",9.5],["GPN_ma20_85.81",9.5],["OTF_ma20_10.49",9.5],["IIPR_ma20_55.36",9.6],["NFLX_ma20_73.50",9.6],["WEX_ma20_185.36",9.6],["BX_ma20_122.59",9.7],["HE_ma20_9.77",9.7],["MKC_ma20_49.09",9.9],["MPT_ma20_3.59",9.9],["PRGS_ma20_40.55",9.9],["BMRN_ma20_62.88",10.0],["NRG_ma20_104.89",10.1],["CHWY_ma20_20.02",10.2],["BAH_ma20_74.28",10.3],["GIS_ma20_35.31",10.3],["SBAC_ma20_174.78",10.3],["WYNN_ma20_83.67",10.3],["PENN_ma20_16.30",10.4],["PIPR_ma20_72.16",10.4],["IONS_ma20_48.10",10.5],["RCI_ma20_34.07",10.5],["ETOR_ma20_28.14",10.7],["LBTYK_ma20_9.68",10.7],["MKC.V_ma20_51.14",10.7],["FOUR_ma20_40.15",11.0],["HOS_ma20_8.43",11.0],["BCE_ma20_21.94",11.2],["FA_ma20_20.12",11.2],["FIS_ma20_36.09",11.2],["LBTYA_ma20_9.93",11.3],["LVS_ma20_40.36",11.4],["PAYX_ma20_110.22",11.4],["AN_ma20_181.29",11.6],["PRG_ma20_34.63",11.7],["ARWR_ma20_71.84",11.9],["GIL_ma20_45.87",11.9],["MIRM_ma20_92.79",11.9],["AGNC_ma20_9.84",12.0],["CLDX_ma20_35.53",12.3],["AXSM_ma20_201.53",12.4],["PJT_ma20_155.84",12.4],["EFX_ma20_157.56",12.5],["PHVS_ma20_35.10",12.5],["ALNY_ma20_247.41",12.6],["SGHC_ma20_12.68",12.7],["TRU_ma20_71.67",13.0],["XRAY_ma20_9.80",13.0],["KGC_ma20_27.21",13.1],["WD_ma20_38.44",13.2],["AIR_ma20_116.29",13.4],["MGTX_ma20_12.24",13.5],["IMNM_ma20_23.74",13.6],["WEN_ma20_6.95",13.6],["NLY_ma20_21.03",13.7],["STWD_ma20_14.83",13.7],["WY_ma20_21.04",13.9],["IMTX_ma20_8.69",14.4],["GRND_ma20_15.37",14.5],["GHRS_ma20_26.28",14.6],["MOS_ma20_24.16",14.7],["MRP_ma20_28.26",14.8],["MAAS_ma20_15.81",15.4],["RSI_ma20_23.11",15.5],["DYN_ma20_17.60",15.8],["TYRA_ma20_23.67",15.8],["UNIT_ma20_9.31",15.8],["MLYS_ma20_27.42",16.0],["THRM_ma20_36.35",16.1],["CHTR_ma20_127.02",16.2],["APP_ma20_312.46",16.5],["ORC_ma20_5.98",17.0],["AXGN_ma20_43.77",17.1],["TPB_ma20_65.49",17.7],["BXMT_ma20_12.88",18.1],["FLUT_ma20_89.15",19.2],["WGS_ma20_87.21",19.3],["DKNG_ma20_22.20",19.4],["STC_ma20_61.72",19.7],["MGM_ma20_36.70",20.4],["BCAX_ma20_21.28",20.7],["RAPP_ma20_39.07",21.4],["ALHC_ma20_9.71",22.3],["GEN_ma20_26.91",22.4],["ALKT_ma20_17.04",22.7],["FMC_ma20_10.45",23.8],["XENE_ma20_47.09",23.9],["ACAD_ma20_24.86",24.6],["NESR_ma20_31.35",27.1],["FICO_ma20_875.10",32.3],["OCUL_ma20_9.65",38.6],["NKTR_ma20_63.70",46.2],["EMAT_ma20_3.19",56.4],["XNDU_ma20_6.79",57.9],["QURE_ma20_39.36",67.8],["LQDA_ma20_62.40",117.9],["CTVA_ma20_74.57",525.6]] }
+].filter(c => c.files.length);   // indicators with no cards today stay out of the feed
+const FREE = 3; // first cards of each indicator open without a lock
+
+const LOCK_SVG = `<svg viewBox="0 0 200 250" aria-hidden="true">
+  <g class="shackle"><path d="M52 118 V70 a48 48 0 0 1 96 0 V118" fill="none" stroke="url(#lkS)" stroke-width="20"/></g>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkB)"/>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkBr)"/>
+  <rect x="14" y="110" width="172" height="136" rx="12" fill="url(#lkT)"/>
+  <path d="M100 150 a17 17 0 0 1 9 31.5 L116 214 H84 L91 181.5 A17 17 0 0 1 100 150Z" fill="#26282b" stroke="#6d7175" stroke-width="1.5"/>
+</svg>`;
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const feed = document.getElementById("feed");
+const tabs = document.getElementById("tabs");
+const pips = document.getElementById("pips");
+const stamp = document.getElementById("stamp");
+const hint = document.getElementById("hint");
+
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let opened = store.get("velora.opened", []);
+
+const ITEMS = [];
+// files: [name, target %], lowest target first — same order as the card wheel
+CATS.forEach(cat => cat.files.forEach(([f, target], i) => {
+  const [sym, , price] = f.split("_");
+  ITEMS.push({ base:f, sym, price, target, cat, locked: i >= FREE && !opened.includes(f) });
+}));
+
+// Revolving-door flip: every swipe right adds +180° around the vertical axis,
+// so the card always keeps turning the same way (swipe left turns it back the other way).
+function makeFlipper(card, flip, it){
+  let angle = 0, startX = 0, startY = 0, dx = 0, tracking = false, horizontal = null, justDragged = false;
+  // a swipe must not also count as a tap on the card
+  card.addEventListener("click", e => { if (justDragged) { e.stopPropagation(); e.preventDefault(); } }, true);
+  const W = () => card.offsetWidth || 300;
+  const faces = flip.querySelectorAll(".face");
+  function paint(a, animate){
+    flip.classList.toggle("drag", !animate);
+    flip.style.transform = `rotateY(${a}deg)`;
+    // shade the faces as they go edge-on, like light falling off a turning door
+    const edge = Math.abs(Math.sin(a * Math.PI / 180));
+    faces.forEach(f => f.style.setProperty("--shade", animate ? 0 : (edge * .55).toFixed(3)));
+    const showingBack = Math.round(a / 180) % 2 !== 0;
+    card.classList.toggle("flipped", showingBack);
+  }
+  function turn(dir){
+    if (it.locked) return;
+    angle += 180 * dir;
+    paint(angle, true);
+    hint.classList.add("hide");
+  }
+  card.addEventListener("pointerdown", e => {
+    if (it.locked || e.target.closest("button")) return;
+    tracking = true; horizontal = null; dx = 0;
+    startX = e.clientX; startY = e.clientY;
+  });
+  card.addEventListener("pointermove", e => {
+    if (!tracking) return;
+    const mx = e.clientX - startX, my = e.clientY - startY;
+    if (horizontal === null && Math.hypot(mx, my) > 8) {
+      horizontal = Math.abs(mx) > Math.abs(my) * 1.2;
+      if (horizontal) card.setPointerCapture(e.pointerId); else tracking = false;
+    }
+    if (!horizontal) return;
+    dx = mx;
+    // the card follows the finger, up to a half turn
+    paint(angle + Math.max(-180, Math.min(180, dx / W() * 200)), false);
+  });
+  const release = () => {
+    if (!tracking) return;
+    tracking = false;
+    if (!horizontal) return;
+    justDragged = true; setTimeout(() => justDragged = false, 0);
+    if (Math.abs(dx) > W() * .18) turn(dx > 0 ? 1 : -1);
+    else paint(angle, true);     // not far enough: swing back
+  };
+  card.addEventListener("pointerup", release);
+  card.addEventListener("pointercancel", () => { if (tracking && horizontal) paint(angle, true); tracking = false; });
+  return turn;
+}
+
+const slides = ITEMS.map((it, n) => {
+  const s = document.createElement("section");
+  s.className = "slide";
+  s.style.setProperty("--c", it.cat.color);
+  s.dataset.n = n;
+  const eager = n < 3 ? "eager" : "lazy";
+  s.innerHTML = `
+    <div class="glow" aria-hidden="true"></div>
+    <figure class="card${it.locked ? " locked" : ""}" style="margin:0">
+      <div class="sides" aria-hidden="true"><span class="g">גרף</span><span class="t">טקסט</span></div>
+      <div class="acts">
+        <button class="turn" aria-label="הפיכת הכרטיס של ${it.sym}">↻</button>
+      </div>
+      <div class="flip">
+        <div class="face front">
+          <img src="img/${it.base}_card.webp" alt="גרף ${it.sym}" width="1170" height="2340" loading="${eager}" decoding="async" draggable="false">
+        </div>
+        <div class="face back">
+          <img src="img/${it.base}_info.webp" alt="ניתוח טקסט של ${it.sym}" width="1170" height="2340" loading="${eager}" decoding="async" draggable="false">
+        </div>
+      </div>
+    </figure>`;
+  const card = s.querySelector(".card");
+  const turn = makeFlipper(card, s.querySelector(".flip"), it);
+  s.querySelector(".turn").onclick = () => turn(1);
+  s.turn = turn;
+
+  // A double tap saves the stock to the favorites. On the back (plain text on white)
+  // a single tap turns the card back to the chart, after a beat so a double tap can win.
+  let tapT = 0, tapTimer = null;
+  s.querySelector(".flip").addEventListener("click", e => {
+    if (it.locked || e.target.closest(".lock")) return;
+    const now = performance.now();
+    if (now - tapT < 320) { tapT = 0; clearTimeout(tapTimer); Favs.toggle(it.sym, card); return; }
+    tapT = now;
+    if (card.classList.contains("flipped")) tapTimer = setTimeout(() => turn(1), 300);
+  });
+  if (it.locked) {
+    const b = document.createElement("button");
+    b.className = "lock";
+    b.setAttribute("aria-label", "פתיחת הכרטיס של " + it.sym);
+    b.innerHTML = `<div class="body">${LOCK_SVG}</div><span class="say">הקישו לפתיחת ${it.sym}</span>`;
+    // only a tap opens the lock — a swipe that starts on it must not
+    let downX = 0, downY = 0;
+    b.addEventListener("pointerdown", e => { downX = e.clientX; downY = e.clientY; });
+    b.onclick = e => {
+      if (e.detail && Math.hypot(e.clientX - downX, e.clientY - downY) > 10) return;
+      b.classList.add("opening");
+      setTimeout(() => { b.classList.add("gone"); card.classList.remove("locked"); }, reduce ? 0 : 320);
+      setTimeout(() => b.remove(), reduce ? 0 : 900);
+      it.locked = false;
+      opened = [...new Set([...opened, it.base])];
+      store.set("velora.opened", opened);
+    };
+    s.querySelector(".front").appendChild(b);
+  }
+  feed.appendChild(s);
+  const pip = document.createElement("i");
+  pips.appendChild(pip);
+  return { el:s, pip, it };
+});
+
+const end = document.createElement("section");
+end.className = "end";
+end.innerHTML = `<h2>סוף הפיד</h2><p>${ITEMS.length} מניות · ${CATS.length} אינדיקטורים · סריקת ${DATE}</p>
+  <p class="sig">© <span>Eldar &amp; Elazar</span></p>`;
+feed.appendChild(end);
+
+const tabBtns = CATS.map(cat => {
+  const b = document.createElement("button");
+  b.style.setProperty("--tc", cat.color);
+  b.innerHTML = `<span class="sw"></span>${cat.label} <span style="opacity:.6">${cat.files.length}</span>`;
+  b.onclick = () => {
+    const first = slides.findIndex(s => s.it.cat === cat);
+    slides[first].el.scrollIntoView({ block:"center", behavior: reduce ? "auto" : "smooth" });
+  };
+  tabs.appendChild(b);
+  return b;
+});
+
+let current = -1;
+function setActive(n){
+  if (n === current) return;
+  current = n;
+  slides.forEach((s, i) => {
+    s.el.classList.toggle("live", i === n);
+    s.pip.classList.toggle("on", i === n);
+  });
+  const it = slides[n].it;
+  tabBtns.forEach((b, i) => b.setAttribute("aria-current", CATS[i] === it.cat));
+  stamp.textContent = `${DATE} · 1D · ${n + 1}/${ITEMS.length}`;
+  document.documentElement.style.setProperty("--c", it.cat.color);
+  tabBtns[CATS.indexOf(it.cat)].scrollIntoView({ block:"nearest", inline:"center", behavior: reduce ? "auto" : "smooth" });
+}
+
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting && e.intersectionRatio > .55) setActive(+e.target.dataset.n); });
+}, { root: feed, threshold:[.56, .8] });
+slides.forEach(s => io.observe(s.el));
+setActive(0);
+
+feed.addEventListener("scroll", () => hint.classList.add("hide"), { once:true, passive:true });
+// Trackpad: a two-finger sideways swipe flips the card on screen.
+// Fingers moving right (deltaX < 0) turn it right, same as a touch swipe.
+// One flip per gesture — the flip stays armed off until the trackpad goes quiet,
+// so the momentum tail of the same swipe doesn't flip it back.
+let wheelAcc = 0, wheelSpent = false, wheelQuiet = null;
+feed.addEventListener("wheel", e => {
+  if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+  e.preventDefault();                       // also stops the browser's back/forward swipe
+  clearTimeout(wheelQuiet);
+  wheelQuiet = setTimeout(() => { wheelAcc = 0; wheelSpent = false; }, 220);
+  if (wheelSpent) return;
+  wheelAcc += e.deltaX;
+  if (Math.abs(wheelAcc) > 40) {
+    wheelSpent = true;
+    slides[current].el.turn(wheelAcc < 0 ? 1 : -1);
+  }
+}, { passive:false });
+
+feed.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    e.preventDefault();
+    slides[current].el.turn(e.key === "ArrowRight" ? 1 : -1);
+    return;
+  }
+  const step = e.key === "ArrowDown" || e.key === "PageDown" ? 1 : (e.key === "ArrowUp" || e.key === "PageUp" ? -1 : 0);
+  if (!step) return;
+  e.preventDefault();
+  const n = Math.min(slides.length - 1, Math.max(0, current + step));
+  slides[n].el.scrollIntoView({ block:"center", behavior: reduce ? "auto" : "smooth" });
+});
+</script>
+
+</body></html>
