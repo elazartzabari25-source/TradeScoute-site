@@ -208,7 +208,7 @@ function build(){
     const el = document.createElement("div");
     el.className = "card";
     el.style.setProperty("--cc", s.row.color);
-    el.innerHTML = `<img src="img/${s.f}_card.webp" alt="${s.sym}" draggable="false">`;
+    el.innerHTML = `<img src="img/${s.f}_card.webp" alt="${s.sym}" width="500" height="1000" loading="lazy" decoding="async" draggable="false">`;
     stage.appendChild(el);
     return el;
   });
